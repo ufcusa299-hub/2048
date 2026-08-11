@@ -207,9 +207,9 @@
     justify-content: center;
     border-radius: var(--radius-tile);
     font-weight: 800;
-    transition: top 0.32s cubic-bezier(0.16, 1, 0.3, 1),
-                left 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: top, left;
+    top: 0; left: 0;
+    transition: transform 0.19s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
   }
   .tile-inner {
     position: relative;
@@ -219,6 +219,7 @@
     transform: scale(1);
     box-shadow: 0 2px 6px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.06);
     overflow: hidden;
+    will-change: transform;
   }
   /* هالة ذهبية داخلية تلمع عند الظهور/الدمج */
   .tile-inner::after {
@@ -231,32 +232,31 @@
     pointer-events: none;
   }
   .tile.new .tile-inner {
-    animation: tileSpawn 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: tileSpawn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
   .tile.new .tile-inner::after {
-    animation: tileGlow 0.5s ease-out;
+    animation: tileGlow 0.32s ease-out;
   }
   .tile.merged .tile-inner {
-    animation: tileMergePop 0.36s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: tileMergePop 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     z-index: 2;
   }
   .tile.merged .tile-inner::after {
-    animation: tileGlow 0.5s ease-out;
+    animation: tileGlow 0.32s ease-out;
   }
   @keyframes tileSpawn {
-    0%   { transform: scale(0) rotate(-6deg); opacity: 0; }
-    60%  { transform: scale(1.08) rotate(1deg); opacity: 1; }
-    100% { transform: scale(1) rotate(0deg); }
+    0%   { transform: scale(0.3); opacity: 0; }
+    70%  { transform: scale(1.06); opacity: 1; }
+    100% { transform: scale(1); }
   }
   @keyframes tileMergePop {
     0%   { transform: scale(1); }
-    35%  { transform: scale(1.22) translateY(-2px); box-shadow: 0 8px 18px -4px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.12); }
-    65%  { transform: scale(0.96); }
+    45%  { transform: scale(1.14); box-shadow: 0 8px 18px -4px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.12); }
     100% { transform: scale(1); }
   }
   @keyframes tileGlow {
     0%   { opacity: 0; }
-    35%  { opacity: 0.9; }
+    40%  { opacity: 0.85; }
     100% { opacity: 0; }
   }
 
@@ -867,6 +867,10 @@
     isGameOver = !!data.isGameOver;
     board = boardFromTiles();
 
+    // تفريغ عناصر الـ DOM القديمة قبل رسم اللعبة المحمّلة
+    tilesLayer.innerHTML = '';
+    tileElements.clear();
+
     gameOverOverlay.classList.remove('show');
     winOverlay.classList.remove('show');
     render();
@@ -973,30 +977,6 @@
     return b.map(row => row.slice().reverse());
   }
 
-  // ينفذ حركة كاملة على اللوحة، ويعيد اللوحة الجديدة + النقاط المكتسبة + هل تغيرت اللوحة.
-  function applyMove(b, direction) {
-    let working = cloneBoard(b);
-    let totalGained = 0;
-
-    if (direction === 'up') working = transpose(working);
-    else if (direction === 'down') working = reverseRows(transpose(working));
-    else if (direction === 'right') working = reverseRows(working);
-    // 'left' يبقى كما هو
-
-    for (let r = 0; r < BOARD_SIZE; r++) {
-      const { row, gained } = mergeRowLeft(working[r]);
-      working[r] = row;
-      totalGained += gained;
-    }
-
-    if (direction === 'up') working = transpose(working);
-    else if (direction === 'down') working = transpose(reverseRows(working));
-    else if (direction === 'right') working = reverseRows(working);
-
-    const moved = !boardsEqual(b, working);
-    return { board: working, gained: totalGained, moved };
-  }
-
   function canMove(b) {
     if (getEmptyCells(b).length > 0) return true;
     for (let r = 0; r < BOARD_SIZE; r++) {
@@ -1010,8 +990,9 @@
   }
 
   // ===================== ربط منطق اللعبة بعرض الـ Tiles (مع تتبع الهوية للـ Animation) =====================
-  // لتحريك الـ Tiles بصريًا (بدل إعادة الرسم الكامل)، نحسب الحركة على شبكة من
-  // "tile objects" لها id ثابت، بالتوازي مع منطق الأرقام الصرف أعلاه.
+  // كل tile يحافظ على نفس الـ id طوال حركته عبر اللوحة، بدل إعادة توليده من
+  // جديد في كل حركة. هذا هو ما يتيح لعنصر الـ DOM المطابق أن ينزلق فعليًا
+  // (transform transition) بدل أن "يقفز" فجأة لمكانه الجديد.
 
   function boardFromTiles() {
     const b = createEmptyBoard();
@@ -1019,17 +1000,78 @@
     return b;
   }
 
+  // يرجع، لكل "خط" (صف أو عمود) بحسب اتجاه الحركة، قائمة الإحداثيات [r, c]
+  // مرتبة من الحافة التي تتحرك نحوها التايلز إلى الحافة المقابلة.
+  function linePositions(direction, lineIndex) {
+    const positions = [];
+    for (let i = 0; i < BOARD_SIZE; i++) {
+      let r, c;
+      if (direction === 'left') { r = lineIndex; c = i; }
+      else if (direction === 'right') { r = lineIndex; c = BOARD_SIZE - 1 - i; }
+      else if (direction === 'up') { r = i; c = lineIndex; }
+      else { r = BOARD_SIZE - 1 - i; c = lineIndex; } // down
+      positions.push([r, c]);
+    }
+    return positions;
+  }
+
+  // ينفّذ الحركة مباشرة على مصفوفة الـ tiles نفسها، محافظًا على هوية (id) كل
+  // مربع باقٍ، ويحذف فقط الـ tile الذي تم دمجه داخل تايل آخر.
+  function moveTiles(direction) {
+    const tilesByPos = new Map();
+    for (const t of tiles) tilesByPos.set(t.row + ',' + t.col, t);
+
+    const removedIds = new Set();
+    let gained = 0;
+    let moved = false;
+
+    for (let lineIndex = 0; lineIndex < BOARD_SIZE; lineIndex++) {
+      const positions = linePositions(direction, lineIndex);
+      const lineTiles = [];
+      for (const [r, c] of positions) {
+        const key = r + ',' + c;
+        if (tilesByPos.has(key)) lineTiles.push(tilesByPos.get(key));
+      }
+
+      let writeIndex = 0;
+      let i = 0;
+      while (i < lineTiles.length) {
+        const cur = lineTiles[i];
+        const next = lineTiles[i + 1];
+        const [nr, nc] = positions[writeIndex];
+
+        if (next && next.value === cur.value) {
+          if (cur.row !== nr || cur.col !== nc) moved = true;
+          cur.row = nr; cur.col = nc;
+          cur.value = cur.value * 2;
+          cur.isMerged = true;
+          cur.isNew = false;
+          gained += cur.value;
+          removedIds.add(next.id);
+          moved = true;
+          i += 2;
+        } else {
+          if (cur.row !== nr || cur.col !== nc) moved = true;
+          cur.row = nr; cur.col = nc;
+          cur.isMerged = false;
+          i += 1;
+        }
+        writeIndex++;
+      }
+    }
+
+    if (removedIds.size > 0) {
+      tiles = tiles.filter(t => !removedIds.has(t.id));
+    }
+
+    return { gained, moved };
+  }
+
   function move(direction) {
     if (isGameOver) return;
 
-    const beforeBoard = boardFromTiles();
-    const { board: afterBoard, gained, moved } = applyMove(beforeBoard, direction);
-
+    const { gained, moved } = moveTiles(direction);
     if (!moved) return; // حركة غير قانونية: لا تغيير، لا نقاط، لا Tile جديد
-
-    // إعادة بناء قائمة الـ tiles الجديدة اعتمادًا على النتيجة الرقمية.
-    // (تبسيط: نعيد التموضع بأقرب تطابق حسب الترتيب الأصلي للحفاظ على إحساس الحركة)
-    tiles = rebuildTilesForMove(tiles, beforeBoard, afterBoard, direction);
 
     score += gained;
     if (score > best) {
@@ -1037,7 +1079,8 @@
       localStorage.setItem('mergeGrid.best', String(best));
     }
 
-    const spawned = spawnRandomTile(afterBoardToBoard());
+    const currentBoard = boardFromTiles();
+    const spawned = spawnRandomTile(currentBoard);
     if (spawned) {
       tiles.push({
         id: tileIdCounter++,
@@ -1071,73 +1114,71 @@
     saveGame();
   }
 
-  function afterBoardToBoard() {
-    return boardFromTiles();
-  }
-
   function hasTileValue(v) {
     return tiles.some(t => t.value >= v);
   }
 
-  // خوارزمية تبسيطية لإعادة بناء الـ tiles بعد حركة: نعيد توزيع القيم الناتجة
-  // على مواقعها الجديدة صفًا-تلو-صف (أو عمودًا) بنفس منطق mergeRowLeft، مع
-  // وسم القديم كمدمج عند حدوث اندماج فعلي والجديد كوليد جديد لاحقًا فقط عند spawn.
-  function rebuildTilesForMove(oldTiles, beforeBoard, afterBoard) {
-    // نبني tiles جديدة بالكامل من afterBoard، مع محاولة الحفاظ على smoothness
-    // البصري عبر نقل نفس الـ DOM elements (باستخدام key ثابت لكل خلية-قيمة).
-    const newTiles = [];
-    let id = tileIdCounter;
-    for (let r = 0; r < BOARD_SIZE; r++) {
-      for (let c = 0; c < BOARD_SIZE; c++) {
-        const v = afterBoard[r][c];
-        if (v !== 0) {
-          newTiles.push({ id: id++, row: r, col: c, value: v, isNew: false, isMerged: wasMerge(beforeBoard, afterBoard, r, c, v) });
-        }
-      }
-    }
-    tileIdCounter = id;
-    return newTiles;
-  }
-
-  function wasMerge(beforeBoard, afterBoard, r, c, v) {
-    // تقدير بسيط: إذا كانت القيمة الحالية أكبر من أي قيمة كانت موجودة في نفس
-    // الصف/العمود قبل الحركة بنفس المكان تمامًا، نعتبرها ناتج دمج لعرض Pop Animation.
-    return v > 2 && beforeBoard[r][c] !== v;
-  }
+  // خريطة تحتفظ بعناصر DOM الحالية لكل tile حسب الـ id، حتى يتم تحديث
+  // موضعها (transform) بدل إعادة إنشائها في كل render — هذا ما يفعّل فعليًا
+  // انتقال (transition) الحركة بسلاسة عالية بدل القفز الفوري.
+  const tileElements = new Map();
 
   // ===================== الرسم (Render) =====================
   function render() {
-    tilesLayer.innerHTML = '';
     const cellSize = `calc((100% - var(--gap) * 3) / 4)`;
+    const step = `calc((100% + var(--gap)) / 4)`;
+    const liveIds = new Set();
 
     for (const t of tiles) {
-      const el = document.createElement('div');
-      el.className = 'tile' + (t.isNew ? ' new' : '') + (t.isMerged ? ' merged' : '');
-      el.style.width = cellSize;
-      el.style.height = cellSize;
-      el.style.top = `calc((100% + var(--gap)) / 4 * ${t.row})`;
-      el.style.left = `calc((100% + var(--gap)) / 4 * ${t.col})`;
+      liveIds.add(t.id);
+      let el = tileElements.get(t.id);
+      const translate = `translate(calc(${step} * ${t.col}), calc(${step} * ${t.row}))`;
 
-      const inner = document.createElement('div');
-      inner.className = 'tile-inner';
+      if (!el) {
+        // عنصر جديد كليًا: ننشئه في موضعه مباشرة (بدون انتقال حركي، فهو أصلًا سيظهر بأنيميشن spawn)
+        el = document.createElement('div');
+        el.className = 'tile';
+        el.style.width = cellSize;
+        el.style.height = cellSize;
+
+        const inner = document.createElement('div');
+        inner.className = 'tile-inner';
+        el.appendChild(inner);
+
+        tilesLayer.appendChild(el);
+        tileElements.set(t.id, el);
+        el.style.transform = translate;
+      } else {
+        // عنصر موجود: مجرد تحديث الـ transform يشغّل الـ transition تلقائيًا بسلاسة GPU
+        el.style.transform = translate;
+      }
+
+      el.classList.toggle('new', !!t.isNew);
+      el.classList.toggle('merged', !!t.isMerged);
+
+      const inner = el.firstElementChild;
       const colors = tileColor(t.value);
       inner.style.background = colors.bg;
       inner.style.color = colors.fg;
       inner.style.fontSize = tileFontSize(t.value);
       inner.textContent = t.value;
       // تأخير بسيط لظهور المربع الجديد حتى تكتمل حركة انزلاق بقية المربعات أولًا
-      if (t.isNew) inner.style.animationDelay = '0.22s';
+      inner.style.animationDelay = t.isNew ? '0.12s' : '0s';
+    }
 
-      el.appendChild(inner);
-      tilesLayer.appendChild(el);
+    // إزالة عناصر الـ tiles التي لم تعد موجودة (بعد اندماجها ضمن مربع آخر)
+    for (const [id, el] of tileElements) {
+      if (!liveIds.has(id)) {
+        el.remove();
+        tileElements.delete(id);
+      }
     }
 
     scoreValueEl.textContent = String(score);
     bestValueEl.textContent = String(best);
 
     // إزالة أعلام new/merged بعد الرسم حتى لا تتكرر الـ Animation في كل render
-    // المدة أطول قليلًا من مدة أطول أنيميشن (spawn/merge) لضمان اكتمالها بسلاسة
-    setTimeout(() => { tiles.forEach(t => { t.isNew = false; t.isMerged = false; }); }, 420);
+    setTimeout(() => { tiles.forEach(t => { t.isNew = false; t.isMerged = false; }); }, 260);
   }
 
   function showScorePopup(amount) {
@@ -1160,6 +1201,10 @@
     isGameOver = false;
     gameOverOverlay.classList.remove('show');
     winOverlay.classList.remove('show');
+
+    // تفريغ عناصر الـ DOM الخاصة باللعبة السابقة قبل بدء لعبة جديدة
+    tilesLayer.innerHTML = '';
+    tileElements.clear();
 
     const b = createEmptyBoard();
     for (let i = 0; i < 2; i++) {
