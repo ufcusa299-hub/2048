@@ -436,7 +436,7 @@
   }
 
   /* ===== نظام الشاشات (Splash / Home / Game) ===== */
-  .screen { display: none; width: 100%; max-width: 420px; }
+  .screen { display: none; width: 100%; max-width: 420px; position: relative; }
   .screen.active { display: block; }
 
   /* ----- Splash ----- */
@@ -677,12 +677,125 @@
     flex-shrink: 0;
   }
   .theme-option.active .theme-check { background: var(--accent); color: #241A0A; border-color: var(--accent); }
+
+  /* ===== زخارف الثيمات — عناصر بصرية فعلية (ليست مجرد ألوان) ===== */
+  .theme-decor {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  html[data-theme="royal"] .decor-royal { opacity: 1; }
+  html[data-theme="garden"] .decor-garden { opacity: 1; }
+
+  /* ----- زخرفة "القصر الملكي": قوس حجري + عمودان + لمعات ----- */
+  .royal-arch {
+    position: absolute;
+    top: -160px; left: 50%;
+    transform: translateX(-50%);
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    border: 3px solid rgba(181, 101, 242, 0.5);
+    box-shadow: 0 0 50px var(--gold-glow), inset 0 0 50px rgba(181, 101, 242, 0.18);
+  }
+  .royal-pillar {
+    position: absolute;
+    top: 6%; bottom: 6%;
+    width: 18px;
+    background: repeating-linear-gradient(180deg,
+      rgba(242, 183, 5, 0.45) 0 3px,
+      rgba(242, 183, 5, 0.06) 3px 10px);
+    border-radius: 9px;
+    box-shadow: 0 0 26px var(--gold-glow);
+    opacity: 0.6;
+  }
+  .royal-pillar::before, .royal-pillar::after {
+    content: '';
+    position: absolute; left: -6px; right: -6px; height: 10px;
+    background: linear-gradient(180deg, #FCE9A8, var(--accent-2));
+    border-radius: 4px;
+    opacity: 0.7;
+  }
+  .royal-pillar::before { top: -8px; }
+  .royal-pillar::after { bottom: -8px; }
+  .royal-pillar-left { left: 2%; }
+  .royal-pillar-right { right: 2%; }
+  .royal-sparkle {
+    position: absolute;
+    width: 7px; height: 7px;
+    background: var(--accent);
+    transform: rotate(45deg);
+    box-shadow: 0 0 10px var(--gold-glow);
+    opacity: 0.85;
+    animation: sparkleTwinkle 2.4s ease-in-out infinite;
+  }
+  @keyframes sparkleTwinkle {
+    0%, 100% { opacity: 0.85; transform: rotate(45deg) scale(1); }
+    50% { opacity: 0.25; transform: rotate(45deg) scale(0.7); }
+  }
+  .royal-sparkle.s1 { top: 10%; left: 14%; animation-delay: 0s; }
+  .royal-sparkle.s2 { top: 22%; right: 16%; animation-delay: 0.8s; }
+  .royal-sparkle.s3 { top: 8%; right: 30%; animation-delay: 1.5s; }
+
+  /* ----- زخرفة "الحديقة الزمردية": دوالي وأوراق ذهبية ----- */
+  .garden-vine {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 76px;
+    background-repeat: repeat-y;
+    background-size: 76px 230px;
+    opacity: 0.4;
+  }
+  .garden-vine-left {
+    left: -6px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 76 230'%3E%3Cpath d='M14 0 C46 32 10 64 42 96 C10 128 46 160 14 192 C40 210 22 222 34 230' stroke='%2334D399' stroke-width='3' fill='none' opacity='0.55'/%3E%3Cellipse cx='40' cy='42' rx='12' ry='6' fill='%23F2B705' opacity='0.55' transform='rotate(28 40 42)'/%3E%3Cellipse cx='16' cy='100' rx='12' ry='6' fill='%2334D399' opacity='0.55' transform='rotate(-24 16 100)'/%3E%3Cellipse cx='40' cy='158' rx='12' ry='6' fill='%23F2B705' opacity='0.5' transform='rotate(28 40 158)'/%3E%3Cellipse cx='18' cy='205' rx='10' ry='5' fill='%2334D399' opacity='0.5' transform='rotate(-18 18 205)'/%3E%3C/svg%3E");
+  }
+  .garden-vine-right {
+    right: -6px;
+    transform: scaleX(-1);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 76 230'%3E%3Cpath d='M14 0 C46 32 10 64 42 96 C10 128 46 160 14 192 C40 210 22 222 34 230' stroke='%2334D399' stroke-width='3' fill='none' opacity='0.55'/%3E%3Cellipse cx='40' cy='42' rx='12' ry='6' fill='%23F2B705' opacity='0.55' transform='rotate(28 40 42)'/%3E%3Cellipse cx='16' cy='100' rx='12' ry='6' fill='%2334D399' opacity='0.55' transform='rotate(-24 16 100)'/%3E%3Cellipse cx='40' cy='158' rx='12' ry='6' fill='%23F2B705' opacity='0.5' transform='rotate(28 40 158)'/%3E%3Cellipse cx='18' cy='205' rx='10' ry='5' fill='%2334D399' opacity='0.5' transform='rotate(-18 18 205)'/%3E%3C/svg%3E");
+  }
+
+  /* ----- تاج فوق العنوان (يظهر فقط في ثيم "القصر الملكي") ----- */
+  .home-crown { display: none; justify-content: center; margin-bottom: 4px; filter: drop-shadow(0 0 12px var(--gold-glow)); }
+  .home-crown svg { width: 36px; height: 36px; }
+  html[data-theme="royal"] .home-crown { display: flex; }
+  .splash-crown { display: none; justify-content: center; margin-bottom: 10px; filter: drop-shadow(0 0 14px var(--gold-glow)); }
+  .splash-crown svg { width: 40px; height: 40px; }
+  html[data-theme="royal"] .splash-crown { display: flex; }
 </style>
 </head>
 <body>
 
 <!-- ===================== SPLASH SCREEN ===================== -->
 <div class="screen" id="splashScreen">
+  <div class="theme-decor decor-royal">
+    <div class="royal-arch"></div>
+    <div class="royal-pillar royal-pillar-left"></div>
+    <div class="royal-pillar royal-pillar-right"></div>
+    <div class="royal-sparkle s1"></div>
+    <div class="royal-sparkle s2"></div>
+    <div class="royal-sparkle s3"></div>
+  </div>
+  <div class="theme-decor decor-garden">
+    <div class="garden-vine garden-vine-left"></div>
+    <div class="garden-vine garden-vine-right"></div>
+  </div>
+  <div class="splash-crown" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 8l4.2 3 4.8-6 4.8 6 4.2-3-2 9H5L3 8z" fill="url(#crownGradSplash)"/>
+      <defs>
+        <linearGradient id="crownGradSplash" x1="3" y1="5" x2="21" y2="17" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#FCE9A8"/>
+          <stop offset="0.55" stop-color="#F2B705"/>
+          <stop offset="1" stop-color="#E8940A"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
   <div class="splash-mark">
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M12 2 L20 9 L12 22 L4 9 Z" fill="url(#logoGradSplash)"/>
@@ -704,11 +817,36 @@
 
 <!-- ===================== HOME SCREEN ===================== -->
 <div class="screen" id="homeScreen">
+  <div class="theme-decor decor-royal">
+    <div class="royal-arch"></div>
+    <div class="royal-pillar royal-pillar-left"></div>
+    <div class="royal-pillar royal-pillar-right"></div>
+    <div class="royal-sparkle s1"></div>
+    <div class="royal-sparkle s2"></div>
+    <div class="royal-sparkle s3"></div>
+  </div>
+  <div class="theme-decor decor-garden">
+    <div class="garden-vine garden-vine-left"></div>
+    <div class="garden-vine garden-vine-right"></div>
+  </div>
+
   <div class="home-topbar">
     <div class="home-badge">🏆 <span id="homeBestBadge">0</span></div>
   </div>
 
   <div class="home-hero">
+    <div class="home-crown" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 8l4.2 3 4.8-6 4.8 6 4.2-3-2 9H5L3 8z" fill="url(#crownGradHome)"/>
+        <defs>
+          <linearGradient id="crownGradHome" x1="3" y1="5" x2="21" y2="17" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#FCE9A8"/>
+            <stop offset="0.55" stop-color="#F2B705"/>
+            <stop offset="1" stop-color="#E8940A"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
     <div class="home-hero-mark">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 2 L20 9 L12 22 L4 9 Z" fill="url(#logoGradHome)"/>
