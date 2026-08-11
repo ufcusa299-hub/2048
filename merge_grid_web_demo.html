@@ -1125,23 +1125,34 @@
 
   // نسبة translate() المئوية تُحسب بالنسبة لحجم العنصر نفسه وليس حاويته —
   // لذلك لا يمكن الاعتماد على "%" داخل transform لتحديد موضع الخلية على
-  // الشبكة. بدلًا من ذلك نقيس الحجم الفعلي بالبكسل من خلايا الشبكة الحقيقية.
-  function getGridMetrics() {
-    const first = cellsGrid.children[0];
-    const second = cellsGrid.children[1];
-    const r1 = first.getBoundingClientRect();
-    const r2 = second.getBoundingClientRect();
-    return { cellPx: r1.width, stepPx: r2.left - r1.left };
+  // الشبكة. كما أن الصفحة RTL، وشبكة الخلايا الخلفية (CSS Grid) تعكس ترتيب
+  // الأعمدة بصريًا (أول عنصر في DOM يظهر أقصى اليمين لا اليسار) — لذلك لا يصح
+  // افتراض اتجاه ثابت واحتساب "خطوة" عامة. بدلًا من ذلك: نقرأ الموضع الفعلي
+  // لكل خلية بعينها من الشبكة الخلفية الحقيقية، فتُطابق مواضع المربعات دائمًا
+  // اتجاه العرض الفعلي (RTL أو LTR) بلا افتراضات.
+  function getCellRects() {
+    const layerRect = tilesLayer.getBoundingClientRect();
+    const rects = [];
+    for (let i = 0; i < cellsGrid.children.length; i++) {
+      const r = cellsGrid.children[i].getBoundingClientRect();
+      rects.push({
+        x: r.left - layerRect.left,
+        y: r.top - layerRect.top,
+        size: r.width,
+      });
+    }
+    return rects;
   }
 
   // ===================== الرسم (Render) =====================
   function render() {
-    const { cellPx, stepPx } = getGridMetrics();
+    const cellRects = getCellRects();
+    const firstCell = cellRects[0];
 
     // حماية: إذا استُدعيت render() قبل أن تصبح الشبكة مرئية فعليًا (أبعاد صفرية،
     // مثلًا لأن الشاشة لا تزال display:none)، نؤجل الرسم لأقرب فريم بدل تثبيت
     // مواضع خاطئة على المربعات.
-    if (cellPx <= 0) {
+    if (!firstCell || firstCell.size <= 0) {
       requestAnimationFrame(render);
       return;
     }
@@ -1151,7 +1162,9 @@
     for (const t of tiles) {
       liveIds.add(t.id);
       let el = tileElements.get(t.id);
-      const translate = `translate(${(t.col * stepPx).toFixed(2)}px, ${(t.row * stepPx).toFixed(2)}px)`;
+      const cell = cellRects[t.row * BOARD_SIZE + t.col];
+      const cellPx = cell.size;
+      const translate = `translate(${cell.x.toFixed(2)}px, ${cell.y.toFixed(2)}px)`;
 
       if (!el) {
         // عنصر جديد كليًا: ننشئه في موضعه مباشرة (بدون انتقال حركي، فهو أصلًا سيظهر بأنيميشن spawn)
