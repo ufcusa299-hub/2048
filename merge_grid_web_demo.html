@@ -1137,6 +1137,15 @@
   // ===================== الرسم (Render) =====================
   function render() {
     const { cellPx, stepPx } = getGridMetrics();
+
+    // حماية: إذا استُدعيت render() قبل أن تصبح الشبكة مرئية فعليًا (أبعاد صفرية،
+    // مثلًا لأن الشاشة لا تزال display:none)، نؤجل الرسم لأقرب فريم بدل تثبيت
+    // مواضع خاطئة على المربعات.
+    if (cellPx <= 0) {
+      requestAnimationFrame(render);
+      return;
+    }
+
     const liveIds = new Set();
 
     for (const t of tiles) {
@@ -1339,12 +1348,13 @@
 
   // ===================== أزرار الشاشة الرئيسية =====================
   document.getElementById('homePlayBtn').addEventListener('click', () => {
-    newGame();
+    // إظهار الشاشة أولًا حتى تُقاس أبعاد الشبكة بشكل صحيح داخل newGame()->render()
     showScreen(gameScreen);
+    newGame();
   });
   document.getElementById('homeContinueBtn').addEventListener('click', () => {
-    loadGame();
     showScreen(gameScreen);
+    loadGame();
   });
   document.getElementById('homeSettingsBtn').addEventListener('click', () => {
     settingsBackdrop.classList.add('show');
