@@ -1123,23 +1123,33 @@
   // انتقال (transition) الحركة بسلاسة عالية بدل القفز الفوري.
   const tileElements = new Map();
 
+  // نسبة translate() المئوية تُحسب بالنسبة لحجم العنصر نفسه وليس حاويته —
+  // لذلك لا يمكن الاعتماد على "%" داخل transform لتحديد موضع الخلية على
+  // الشبكة. بدلًا من ذلك نقيس الحجم الفعلي بالبكسل من خلايا الشبكة الحقيقية.
+  function getGridMetrics() {
+    const first = cellsGrid.children[0];
+    const second = cellsGrid.children[1];
+    const r1 = first.getBoundingClientRect();
+    const r2 = second.getBoundingClientRect();
+    return { cellPx: r1.width, stepPx: r2.left - r1.left };
+  }
+
   // ===================== الرسم (Render) =====================
   function render() {
-    const cellSize = `calc((100% - var(--gap) * 3) / 4)`;
-    const step = `calc((100% + var(--gap)) / 4)`;
+    const { cellPx, stepPx } = getGridMetrics();
     const liveIds = new Set();
 
     for (const t of tiles) {
       liveIds.add(t.id);
       let el = tileElements.get(t.id);
-      const translate = `translate(calc(${step} * ${t.col}), calc(${step} * ${t.row}))`;
+      const translate = `translate(${(t.col * stepPx).toFixed(2)}px, ${(t.row * stepPx).toFixed(2)}px)`;
 
       if (!el) {
         // عنصر جديد كليًا: ننشئه في موضعه مباشرة (بدون انتقال حركي، فهو أصلًا سيظهر بأنيميشن spawn)
         el = document.createElement('div');
         el.className = 'tile';
-        el.style.width = cellSize;
-        el.style.height = cellSize;
+        el.style.width = cellPx + 'px';
+        el.style.height = cellPx + 'px';
 
         const inner = document.createElement('div');
         inner.className = 'tile-inner';
@@ -1150,6 +1160,8 @@
         el.style.transform = translate;
       } else {
         // عنصر موجود: مجرد تحديث الـ transform يشغّل الـ transition تلقائيًا بسلاسة GPU
+        el.style.width = cellPx + 'px';
+        el.style.height = cellPx + 'px';
         el.style.transform = translate;
       }
 
@@ -1267,6 +1279,16 @@
     else move(dy > 0 ? 'down' : 'up');
   });
   window.addEventListener('mouseup', () => { mouseDown = false; });
+
+  // إعادة ضبط مواضع المربعات (بدون إعادة تشغيل أنيميشن الظهور/الدمج) عند
+  // تغيّر أبعاد الشبكة، مثل تدوير الجهاز أو تغيير حجم النافذة.
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (tiles.length) render();
+    }, 100);
+  });
 
   // ===================== أزرار الواجهة =====================
   document.getElementById('restartBtn').addEventListener('click', () => {
