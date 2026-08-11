@@ -25,6 +25,7 @@
     --disabled: #3B4166;
     --gold-glow: rgba(242, 183, 5, 0.35);
     --border-soft: rgba(242, 183, 5, 0.18);
+    --bg-glow: #1A2148;
 
     --tile-2-bg: #232A4E;   --tile-2-fg: #F3EFE3;
     --tile-4-bg: #2E3560;   --tile-4-fg: #F3EFE3;
@@ -45,11 +46,83 @@
     --gap: 10px;
   }
 
+  /* ===== ثيم "الملكي البنفسجي" (Royal Arch) ===== */
+  html[data-theme="royal"] {
+    --bg: #170B2E;
+    --bg-elevated: #20103F;
+    --board-bg: #241454;
+    --empty-cell: #2E1A66;
+    --text-primary: #F3EEFB;
+    --text-secondary: #A796C9;
+    --accent: #F2B705;
+    --accent-2: #E8940A;
+    --accent-pressed: #D68C00;
+    --secondary-accent: #B565F2;
+    --success: #34D399;
+    --danger: #F2555A;
+    --disabled: #453072;
+    --gold-glow: rgba(181, 101, 242, 0.4);
+    --border-soft: rgba(181, 101, 242, 0.28);
+    --bg-glow: #3A1F66;
+
+    --tile-2-bg: #2E1A66;   --tile-2-fg: #F3EEFB;
+    --tile-4-bg: #3E2380;   --tile-4-fg: #F3EEFB;
+    --tile-8-bg: #F2A65A;   --tile-8-fg: #241A0A;
+    --tile-16-bg: #F08A4B;  --tile-16-fg: #241A0A;
+    --tile-32-bg: #ED6F3C;  --tile-32-fg: #FFFFFF;
+    --tile-64-bg: #E9522D;  --tile-64-fg: #FFFFFF;
+    --tile-128-bg: #F4C430; --tile-128-fg: #241A0A;
+    --tile-256-bg: #F0B90B; --tile-256-fg: #241A0A;
+    --tile-512-bg: #B565F2; --tile-512-fg: #250A3E;
+    --tile-1024-bg: #C77DFF;--tile-1024-fg: #250A3E;
+    --tile-2048-bg: #F2B705;--tile-2048-fg: #241A0A;
+    --tile-overflow-bg: #D6409F; --tile-overflow-fg: #FFFFFF;
+  }
+
+  /* ===== ثيم "الحديقة الزمردية" (Emerald Garden) ===== */
+  html[data-theme="garden"] {
+    --bg: #07211D;
+    --bg-elevated: #0C2B25;
+    --board-bg: #123830;
+    --empty-cell: #184238;
+    --text-primary: #EFF7F1;
+    --text-secondary: #8FB3A4;
+    --accent: #F2B705;
+    --accent-2: #E8940A;
+    --accent-pressed: #D68C00;
+    --secondary-accent: #34D399;
+    --success: #34D399;
+    --danger: #F2555A;
+    --disabled: #2E4A41;
+    --gold-glow: rgba(242, 183, 5, 0.32);
+    --border-soft: rgba(52, 211, 153, 0.25);
+    --bg-glow: #123B32;
+
+    --tile-2-bg: #184238;   --tile-2-fg: #EFF7F1;
+    --tile-4-bg: #1F5245;   --tile-4-fg: #EFF7F1;
+    --tile-8-bg: #F2A65A;   --tile-8-fg: #241A0A;
+    --tile-16-bg: #F08A4B;  --tile-16-fg: #241A0A;
+    --tile-32-bg: #ED6F3C;  --tile-32-fg: #FFFFFF;
+    --tile-64-bg: #E9522D;  --tile-64-fg: #FFFFFF;
+    --tile-128-bg: #F4C430; --tile-128-fg: #241A0A;
+    --tile-256-bg: #F0B90B; --tile-256-fg: #241A0A;
+    --tile-512-bg: #34D399; --tile-512-fg: #052A20;
+    --tile-1024-bg: #22C3B6;--tile-1024-fg: #052422;
+    --tile-2048-bg: #F2B705;--tile-2048-fg: #241A0A;
+    --tile-overflow-bg: #B4308F; --tile-overflow-fg: #FFFFFF;
+  }
+
+  /* انتقال سلس عند تبديل الثيم بين كل الألوان المرتبطة بالمتغيرات */
+  body, .board-wrap, .score-box, .home-card, .home-secondary-btn, .home-mini-btn,
+  .confirm-box, .settings-panel, .icon-btn, .empty-cell, .tile-inner {
+    transition: background 0.35s ease, border-color 0.35s ease, color 0.35s ease, box-shadow 0.35s ease;
+  }
+
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   body {
     margin: 0;
-    background: radial-gradient(circle at 50% -10%, #1A2148 0%, var(--bg) 55%);
+    background: radial-gradient(circle at 50% -10%, var(--bg-glow) 0%, var(--bg) 55%);
     color: var(--text-primary);
     font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -370,7 +443,7 @@
   #splashScreen.active {
     position: fixed; inset: 0;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    background: radial-gradient(circle at 50% 20%, #1A2148 0%, var(--bg) 60%);
+    background: radial-gradient(circle at 50% 20%, var(--bg-glow) 0%, var(--bg) 60%);
     z-index: 50;
     padding: 40px 24px;
     text-align: center;
@@ -497,7 +570,7 @@
   .home-secondary-btn .home-btn-text b { color: var(--text-primary); font-size: 15px; }
   .home-secondary-btn .home-btn-text small { color: var(--text-secondary); font-size: 11px; }
 
-  .home-mini-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .home-mini-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
   .home-mini-btn {
     background: var(--board-bg);
     border: 1px solid var(--border-soft);
@@ -567,6 +640,43 @@
     display: flex; align-items: center; justify-content: center;
     background: var(--tile-2-bg); color: var(--tile-2-fg); font-size: 16px;
   }
+
+  /* ----- نافذة اختيار الثيم ----- */
+  .theme-option {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--board-bg);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-btn);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    text-align: right;
+    transition: transform 0.1s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+  .theme-option:active { transform: scale(0.98); }
+  .theme-option.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--gold-glow);
+  }
+  .theme-swatch {
+    width: 40px; height: 40px; border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.18), 0 4px 10px -4px rgba(0,0,0,0.5);
+  }
+  .swatch-vault  { background: linear-gradient(135deg, #0B0F1F 45%, #F2B705 100%); }
+  .swatch-royal  { background: linear-gradient(135deg, #170B2E 45%, #B565F2 100%); }
+  .swatch-garden { background: linear-gradient(135deg, #07211D 45%, #34D399 100%); }
+  .theme-option-text { display: flex; flex-direction: column; flex: 1; }
+  .theme-option-text b { font-size: 14px; color: var(--text-primary); }
+  .theme-option-text small { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .theme-check {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 1px solid var(--border-soft);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent); font-size: 12px; font-weight: 800;
+    flex-shrink: 0;
+  }
+  .theme-option.active .theme-check { background: var(--accent); color: #241A0A; border-color: var(--accent); }
 </style>
 </head>
 <body>
@@ -636,6 +746,7 @@
 
   <div class="home-mini-row">
     <button class="home-mini-btn" id="homeSettingsBtn"><span>⚙</span>الإعدادات</button>
+    <button class="home-mini-btn" id="homeThemesBtn"><span>🎨</span>الثيمات</button>
     <button class="home-mini-btn" id="homeHowToPlayBtn"><span>📖</span>طريقة اللعب</button>
   </div>
 
@@ -757,11 +868,40 @@
   </div>
 </div>
 
+<div class="confirm-backdrop" id="themeBackdrop">
+  <div class="confirm-box" style="text-align:right;">
+    <p style="margin-bottom:14px;">اختر الثيم</p>
+
+    <button class="theme-option" data-theme="vault">
+      <div class="theme-swatch swatch-vault"></div>
+      <div class="theme-option-text"><b>الخزنة الذهبية</b><small>ذهبي وكحلي داكن</small></div>
+      <div class="theme-check">✓</div>
+    </button>
+
+    <button class="theme-option" data-theme="royal">
+      <div class="theme-swatch swatch-royal"></div>
+      <div class="theme-option-text"><b>القصر الملكي</b><small>بنفسجي وذهبي</small></div>
+      <div class="theme-check">✓</div>
+    </button>
+
+    <button class="theme-option" data-theme="garden">
+      <div class="theme-swatch swatch-garden"></div>
+      <div class="theme-option-text"><b>الحديقة الزمردية</b><small>أخضر زمردي وذهبي</small></div>
+      <div class="theme-check">✓</div>
+    </button>
+
+    <div class="btn-row" style="margin-top:6px;">
+      <button class="btn btn-primary" id="themeCloseBtn">تم</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 (function () {
   'use strict';
+
 
   // ===================== الثوابت (مطابقة لـ game_constants.dart) =====================
   const BOARD_SIZE = 4;
@@ -804,6 +944,7 @@
   let tiles = [];          // [{id, row, col, value, isNew, isMerged}]
   let soundOn = localStorage.getItem('mergeGrid.sound') !== 'off';
   let hapticOn = localStorage.getItem('mergeGrid.haptic') !== 'off';
+  let currentTheme = localStorage.getItem('mergeGrid.theme') || 'vault';
 
   // ===================== عناصر DOM =====================
   const splashScreen = document.getElementById('splashScreen');
@@ -814,6 +955,7 @@
   const homeContinueBtn = document.getElementById('homeContinueBtn');
   const settingsBackdrop = document.getElementById('settingsBackdrop');
   const howToBackdrop = document.getElementById('howToBackdrop');
+  const themeBackdrop = document.getElementById('themeBackdrop');
   const toastEl = document.getElementById('toast');
 
   const cellsGrid = document.getElementById('cellsGrid');
@@ -1454,11 +1596,44 @@
   document.getElementById('howToCloseBtn').addEventListener('click', () => {
     howToBackdrop.classList.remove('show');
   });
+
+  // ===================== نظام الثيمات (تبديل شكل الواجهة) =====================
+  const themeOptionEls = Array.from(document.querySelectorAll('.theme-option'));
+
+  function applyTheme(name, opts) {
+    opts = opts || {};
+    currentTheme = name;
+    if (name === 'vault') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', name);
+    }
+    localStorage.setItem('mergeGrid.theme', name);
+    themeOptionEls.forEach(el => {
+      el.classList.toggle('active', el.dataset.theme === name);
+    });
+    if (!opts.silent) playHaptic();
+  }
+
+  themeOptionEls.forEach(el => {
+    el.addEventListener('click', () => applyTheme(el.dataset.theme));
+  });
+
+  document.getElementById('homeThemesBtn').addEventListener('click', () => {
+    themeBackdrop.classList.add('show');
+  });
+  document.getElementById('themeCloseBtn').addEventListener('click', () => {
+    themeBackdrop.classList.remove('show');
+  });
+
   document.getElementById('homeRateBtn').addEventListener('click', () => showToast('قريبًا'));
   document.getElementById('homeShareBtn').addEventListener('click', () => showToast('قريبًا'));
   document.getElementById('homeStatsBtn').addEventListener('click', () => {
     showToast('أفضل نتيجة: ' + best);
   });
+
+  // تطبيق الثيم المحفوظ فور الإقلاع (بلا اهتزاز ولا حفظ زائد)
+  applyTheme(currentTheme, { silent: true });
 
   // ===================== الإقلاع: Splash → Home =====================
   bestValueEl.textContent = String(best);
