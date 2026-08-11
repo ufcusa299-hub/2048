@@ -1096,6 +1096,9 @@
     if (gained > 0) showScorePopup(gained);
     playHaptic();
 
+    const mergeCount = tiles.filter(t => t.isMerged).length;
+    if (mergeCount > 0) playTableKnock(mergeCount);
+
     board = boardFromTiles();
 
     if (!hasWon && hasTileValue(WIN_VALUE)) {
@@ -1220,6 +1223,72 @@
     scorePopupEl.classList.remove('show');
     void scorePopupEl.offsetWidth; // إعادة تشغيل الـ Animation
     scorePopupEl.classList.add('show');
+  }
+
+  // ===================== الصوت: طرقة طاولة عند الدمج =====================
+  // صوت مُركَّب بالكامل عبر Web Audio API (لا يحتاج أي ملف خارجي، ويعمل حتى
+  // بدون إنترنت): طبقة "ثمب" منخفضة التردد (اهتزاز الخشب) + طبقة ضجيج قصيرة
+  // مُصفّاة (اصطدام السطح) لمحاكاة صوت طرقة على طاولة.
+  let audioCtx = null;
+  function ensureAudioCtx() {
+    if (audioCtx) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audioCtx = new AC();
+    return audioCtx;
+  }
+  // فتح الصوت عند أول تفاعل من المستخدم (متطلبات سياسات التشغيل التلقائي بالمتصفح)
+  ['pointerdown', 'keydown', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, ensureAudioCtx, { once: true, passive: true });
+  });
+
+  function playTableKnock(strength) {
+    if (!soundOn) return;
+    const ctx = ensureAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const amp = Math.min(1 + (strength - 1) * 0.18, 1.7);
+
+    // طبقة الثمب المنخفض (جسم الطاولة يهتز)
+    const thumpOsc = ctx.createOscillator();
+    thumpOsc.type = 'sine';
+    thumpOsc.frequency.setValueAtTime(150, now);
+    thumpOsc.frequency.exponentialRampToValueAtTime(48, now + 0.11);
+
+    const thumpGain = ctx.createGain();
+    thumpGain.gain.setValueAtTime(0.001, now);
+    thumpGain.gain.exponentialRampToValueAtTime(0.55 * amp, now + 0.008);
+    thumpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+
+    thumpOsc.connect(thumpGain).connect(ctx.destination);
+    thumpOsc.start(now);
+    thumpOsc.stop(now + 0.18);
+
+    // طبقة الطرقة (اصطدام سطح صلب) — ضجيج قصير جدًا مُصفّى
+    const noiseDuration = 0.045;
+    const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * noiseDuration));
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+
+    const noiseFilter = ctx.createBiquadFilter();
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.value = 900;
+    noiseFilter.Q.value = 0.6;
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.32 * amp, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + noiseDuration);
+
+    noise.connect(noiseFilter).connect(noiseGain).connect(ctx.destination);
+    noise.start(now);
   }
 
   function playHaptic() {
