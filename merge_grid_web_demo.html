@@ -207,29 +207,57 @@
     justify-content: center;
     border-radius: var(--radius-tile);
     font-weight: 800;
-    transition: top 0.12s cubic-bezier(0.22, 1, 0.36, 1),
-                left 0.12s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: top 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                left 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: top, left;
   }
   .tile-inner {
+    position: relative;
     width: 100%; height: 100%;
     display: flex; align-items: center; justify-content: center;
     border-radius: var(--radius-tile);
     transform: scale(1);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.06);
+    overflow: hidden;
+  }
+  /* هالة ذهبية داخلية تلمع عند الظهور/الدمج */
+  .tile-inner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-tile);
+    background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.55), rgba(255,255,255,0) 65%);
+    opacity: 0;
+    pointer-events: none;
   }
   .tile.new .tile-inner {
-    animation: tileSpawn 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+    animation: tileSpawn 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .tile.new .tile-inner::after {
+    animation: tileGlow 0.5s ease-out;
   }
   .tile.merged .tile-inner {
-    animation: tileMergePop 0.14s ease-out;
+    animation: tileMergePop 0.36s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    z-index: 2;
+  }
+  .tile.merged .tile-inner::after {
+    animation: tileGlow 0.5s ease-out;
   }
   @keyframes tileSpawn {
-    from { transform: scale(0); }
-    to { transform: scale(1); }
+    0%   { transform: scale(0) rotate(-6deg); opacity: 0; }
+    60%  { transform: scale(1.08) rotate(1deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); }
   }
   @keyframes tileMergePop {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.15); }
+    0%   { transform: scale(1); }
+    35%  { transform: scale(1.22) translateY(-2px); box-shadow: 0 8px 18px -4px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.12); }
+    65%  { transform: scale(0.96); }
     100% { transform: scale(1); }
+  }
+  @keyframes tileGlow {
+    0%   { opacity: 0; }
+    35%  { opacity: 0.9; }
+    100% { opacity: 0; }
   }
 
   /* ===== Overlay (Game Over / Win) ===== */
@@ -1097,6 +1125,8 @@
       inner.style.color = colors.fg;
       inner.style.fontSize = tileFontSize(t.value);
       inner.textContent = t.value;
+      // تأخير بسيط لظهور المربع الجديد حتى تكتمل حركة انزلاق بقية المربعات أولًا
+      if (t.isNew) inner.style.animationDelay = '0.22s';
 
       el.appendChild(inner);
       tilesLayer.appendChild(el);
@@ -1106,7 +1136,8 @@
     bestValueEl.textContent = String(best);
 
     // إزالة أعلام new/merged بعد الرسم حتى لا تتكرر الـ Animation في كل render
-    setTimeout(() => { tiles.forEach(t => { t.isNew = false; t.isMerged = false; }); }, 180);
+    // المدة أطول قليلًا من مدة أطول أنيميشن (spawn/merge) لضمان اكتمالها بسلاسة
+    setTimeout(() => { tiles.forEach(t => { t.isNew = false; t.isMerged = false; }); }, 420);
   }
 
   function showScorePopup(amount) {
