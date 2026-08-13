@@ -1607,8 +1607,13 @@
   }
 
   // ===================== التحكم: لوحة المفاتيح =====================
+  // ملاحظة RTL: العمود المنطقي col=0 يُعرض بصريًا أقصى اليمين (وليس اليسار)
+  // بسبب انعكاس ترتيب أعمدة CSS Grid تلقائيًا في اتجاه RTL. لذلك مفتاح
+  // ArrowLeft (الذي يعني للمستخدم "حرّك الأرقام نحو يسار الشاشة فعليًا")
+  // يجب أن يُترجم لدالة الحركة المنطقية 'right' (تجميع نحو col=3، الذي يظهر
+  // يسارًا)، والعكس صحيح لـ ArrowRight.
   window.addEventListener('keydown', (e) => {
-    const map = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
+    const map = { ArrowLeft: 'right', ArrowRight: 'left', ArrowUp: 'up', ArrowDown: 'down' };
     if (map[e.key]) {
       e.preventDefault();
       move(map[e.key]);
@@ -1616,6 +1621,9 @@
   });
 
   // ===================== التحكم: السحب باللمس =====================
+  // نفس ملاحظة RTL أعلاه: dx > 0 تعني سحبًا فعليًا نحو يمين الشاشة، وهو ما
+  // يجب أن يُحرّك الأرقام بصريًا نحو اليمين، أي دالة الحركة المنطقية 'left'
+  // (تجميع نحو col=0 الذي يُعرض يمينًا في RTL).
   const boardWrap = document.getElementById('boardWrap');
   let touchStartX = 0, touchStartY = 0, touchHandled = false;
 
@@ -1635,7 +1643,7 @@
 
     touchHandled = true;
     if (Math.abs(dx) > Math.abs(dy)) {
-      move(dx > 0 ? 'right' : 'left');
+      move(dx > 0 ? 'left' : 'right');
     } else {
       move(dy > 0 ? 'down' : 'up');
     }
@@ -1653,7 +1661,7 @@
     const dy = e.clientY - mouseStartY;
     if (Math.abs(dx) < MIN_SWIPE_DISTANCE && Math.abs(dy) < MIN_SWIPE_DISTANCE) return;
     mouseHandled = true;
-    if (Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? 'right' : 'left');
+    if (Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? 'left' : 'right');
     else move(dy > 0 ? 'down' : 'up');
   });
   window.addEventListener('mouseup', () => { mouseDown = false; });
