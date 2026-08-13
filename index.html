@@ -1,0 +1,1787 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Merge Grid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* ===== نظام الألوان المركزي — هوية "Premium Vault" (ذهبي/كحلي داكن أصلي) ===== */
+    --bg: #0B0F1F;
+    --bg-elevated: #10152B;
+    --board-bg: #151B36;
+    --empty-cell: #1F2645;
+    --text-primary: #F3EFE3;
+    --text-secondary: #8B92B8;
+    --accent: #F2B705;
+    --accent-2: #E8940A;
+    --accent-pressed: #D68C00;
+    --secondary-accent: #7C5CFF;
+    --success: #34D399;
+    --danger: #F2555A;
+    --disabled: #3B4166;
+    --gold-glow: rgba(242, 183, 5, 0.35);
+    --border-soft: rgba(242, 183, 5, 0.18);
+    --bg-glow: #1A2148;
+
+    --tile-2-bg: #232A4E;   --tile-2-fg: #F3EFE3;
+    --tile-4-bg: #2E3560;   --tile-4-fg: #F3EFE3;
+    --tile-8-bg: #F2A65A;   --tile-8-fg: #241A0A;
+    --tile-16-bg: #F08A4B;  --tile-16-fg: #241A0A;
+    --tile-32-bg: #ED6F3C;  --tile-32-fg: #FFFFFF;
+    --tile-64-bg: #E9522D;  --tile-64-fg: #FFFFFF;
+    --tile-128-bg: #F4C430; --tile-128-fg: #241A0A;
+    --tile-256-bg: #F0B90B; --tile-256-fg: #241A0A;
+    --tile-512-bg: #34D399; --tile-512-fg: #0B2A20;
+    --tile-1024-bg: #22C3B6;--tile-1024-fg: #052422;
+    --tile-2048-bg: #7C5CFF;--tile-2048-fg: #FFFFFF;
+    --tile-overflow-bg: #B4308F; --tile-overflow-fg: #FFFFFF;
+
+    --radius-tile: 12px;
+    --radius-board: 22px;
+    --radius-btn: 16px;
+    --gap: 10px;
+  }
+
+  /* ===== ثيم "الملكي البنفسجي" (Royal Arch) ===== */
+  html[data-theme="royal"] {
+    --bg: #170B2E;
+    --bg-elevated: #20103F;
+    --board-bg: #241454;
+    --empty-cell: #2E1A66;
+    --text-primary: #F3EEFB;
+    --text-secondary: #A796C9;
+    --accent: #F2B705;
+    --accent-2: #E8940A;
+    --accent-pressed: #D68C00;
+    --secondary-accent: #B565F2;
+    --success: #34D399;
+    --danger: #F2555A;
+    --disabled: #453072;
+    --gold-glow: rgba(181, 101, 242, 0.4);
+    --border-soft: rgba(181, 101, 242, 0.28);
+    --bg-glow: #3A1F66;
+
+    --tile-2-bg: #2E1A66;   --tile-2-fg: #F3EEFB;
+    --tile-4-bg: #3E2380;   --tile-4-fg: #F3EEFB;
+    --tile-8-bg: #F2A65A;   --tile-8-fg: #241A0A;
+    --tile-16-bg: #F08A4B;  --tile-16-fg: #241A0A;
+    --tile-32-bg: #ED6F3C;  --tile-32-fg: #FFFFFF;
+    --tile-64-bg: #E9522D;  --tile-64-fg: #FFFFFF;
+    --tile-128-bg: #F4C430; --tile-128-fg: #241A0A;
+    --tile-256-bg: #F0B90B; --tile-256-fg: #241A0A;
+    --tile-512-bg: #B565F2; --tile-512-fg: #250A3E;
+    --tile-1024-bg: #C77DFF;--tile-1024-fg: #250A3E;
+    --tile-2048-bg: #F2B705;--tile-2048-fg: #241A0A;
+    --tile-overflow-bg: #D6409F; --tile-overflow-fg: #FFFFFF;
+  }
+
+  /* ===== ثيم "الحديقة الزمردية" (Emerald Garden) ===== */
+  html[data-theme="garden"] {
+    --bg: #07211D;
+    --bg-elevated: #0C2B25;
+    --board-bg: #123830;
+    --empty-cell: #184238;
+    --text-primary: #EFF7F1;
+    --text-secondary: #8FB3A4;
+    --accent: #F2B705;
+    --accent-2: #E8940A;
+    --accent-pressed: #D68C00;
+    --secondary-accent: #34D399;
+    --success: #34D399;
+    --danger: #F2555A;
+    --disabled: #2E4A41;
+    --gold-glow: rgba(242, 183, 5, 0.32);
+    --border-soft: rgba(52, 211, 153, 0.25);
+    --bg-glow: #123B32;
+
+    --tile-2-bg: #184238;   --tile-2-fg: #EFF7F1;
+    --tile-4-bg: #1F5245;   --tile-4-fg: #EFF7F1;
+    --tile-8-bg: #F2A65A;   --tile-8-fg: #241A0A;
+    --tile-16-bg: #F08A4B;  --tile-16-fg: #241A0A;
+    --tile-32-bg: #ED6F3C;  --tile-32-fg: #FFFFFF;
+    --tile-64-bg: #E9522D;  --tile-64-fg: #FFFFFF;
+    --tile-128-bg: #F4C430; --tile-128-fg: #241A0A;
+    --tile-256-bg: #F0B90B; --tile-256-fg: #241A0A;
+    --tile-512-bg: #34D399; --tile-512-fg: #052A20;
+    --tile-1024-bg: #22C3B6;--tile-1024-fg: #052422;
+    --tile-2048-bg: #F2B705;--tile-2048-fg: #241A0A;
+    --tile-overflow-bg: #B4308F; --tile-overflow-fg: #FFFFFF;
+  }
+
+  /* انتقال سلس عند تبديل الثيم بين كل الألوان المرتبطة بالمتغيرات */
+  body, .board-wrap, .score-box, .home-card, .home-secondary-btn, .home-mini-btn,
+  .confirm-box, .settings-panel, .icon-btn, .empty-cell, .tile-inner {
+    transition: background 0.35s ease, border-color 0.35s ease, color 0.35s ease, box-shadow 0.35s ease;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    margin: 0;
+    background: radial-gradient(circle at 50% -10%, var(--bg-glow) 0%, var(--bg) 55%);
+    color: var(--text-primary);
+    font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern" 1, "liga" 1;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px 16px 40px;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+
+  .app { width: 100%; max-width: 420px; }
+
+  /* ===== الشريط العلوي ===== */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 24px; font-weight: 800; letter-spacing: -0.3px;
+  }
+  .logo-mark {
+    width: 26px; height: 26px;
+    display: block;
+    filter: drop-shadow(0 0 6px var(--gold-glow));
+  }
+  .logo span {
+    background: linear-gradient(180deg, #FCE9A8 0%, var(--accent) 55%, var(--accent-2) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .icon-btn {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--border-soft);
+    background: var(--board-bg);
+    color: var(--accent);
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .icon-btn:active { transform: scale(0.92); background: var(--empty-cell); box-shadow: 0 0 0 4px var(--gold-glow); }
+
+  /* ===== لوحة النتائج ===== */
+  .scores {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .score-box {
+    flex: 1;
+    background: var(--board-bg);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-btn);
+    padding: 10px 14px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .score-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+  }
+  .score-value {
+    font-size: 24px;
+    font-weight: 800;
+    margin-top: 2px;
+  }
+  .score-popup {
+    position: absolute;
+    top: 6px; left: 50%;
+    transform: translateX(-50%);
+    font-weight: 800;
+    color: var(--success);
+    font-size: 15px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .score-popup.show {
+    animation: popupFloat 0.5s ease-out forwards;
+  }
+  @keyframes popupFloat {
+    0% { opacity: 0; transform: translate(-50%, 10px); }
+    30% { opacity: 1; transform: translate(-50%, -6px); }
+    100% { opacity: 0; transform: translate(-50%, -26px); }
+  }
+
+  /* ===== أزرار التحكم ===== */
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .btn {
+    flex: 1;
+    border: none;
+    border-radius: var(--radius-btn);
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s ease, opacity 0.15s ease;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-primary {
+    background: linear-gradient(180deg, #FCE9A8 0%, var(--accent) 45%, var(--accent-2) 100%);
+    color: #241A0A;
+    box-shadow: 0 4px 14px var(--gold-glow);
+  }
+  .btn-secondary {
+    background: var(--board-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-soft);
+  }
+  .btn:disabled { background: var(--disabled); color: #8B92B8; box-shadow: none; cursor: not-allowed; }
+
+  /* ===== لوحة اللعب ===== */
+  .board-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: var(--board-bg);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-board);
+    padding: var(--gap);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.2), 0 20px 40px -20px rgba(0,0,0,0.6);
+  }
+  .cells-grid {
+    position: absolute;
+    inset: var(--gap);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: var(--gap);
+  }
+  .empty-cell {
+    background: var(--empty-cell);
+    border: 1px solid rgba(255,255,255,0.03);
+    border-radius: var(--radius-tile);
+  }
+  .tiles-layer {
+    position: absolute;
+    inset: var(--gap);
+  }
+  .tile {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-tile);
+    font-weight: 800;
+    top: 0; left: 0;
+    transition: transform 0.19s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+  }
+  .tile-inner {
+    position: relative;
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-tile);
+    transform: scale(1);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.06);
+    overflow: hidden;
+    will-change: transform;
+  }
+  /* هالة ذهبية داخلية تلمع عند الظهور/الدمج */
+  .tile-inner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-tile);
+    background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.55), rgba(255,255,255,0) 65%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .tile.new .tile-inner {
+    animation: tileSpawn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .tile.new .tile-inner::after {
+    animation: tileGlow 0.32s ease-out;
+  }
+  .tile.merged .tile-inner {
+    animation: tileMergePop 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    z-index: 2;
+  }
+  .tile.merged .tile-inner::after {
+    animation: tileGlow 0.32s ease-out;
+  }
+  @keyframes tileSpawn {
+    0%   { transform: scale(0.3); opacity: 0; }
+    70%  { transform: scale(1.06); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  @keyframes tileMergePop {
+    0%   { transform: scale(1); }
+    45%  { transform: scale(1.14); box-shadow: 0 8px 18px -4px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.12); }
+    100% { transform: scale(1); }
+  }
+  @keyframes tileGlow {
+    0%   { opacity: 0; }
+    40%  { opacity: 0.85; }
+    100% { opacity: 0; }
+  }
+
+  /* ===== Overlay (Game Over / Win) ===== */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(11, 15, 31, 0.94);
+    backdrop-filter: blur(2px);
+    border-radius: var(--radius-board);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .overlay.show { opacity: 1; pointer-events: all; }
+  .overlay h2 {
+    font-size: 24px; margin: 0 0 6px;
+    color: var(--accent);
+    text-shadow: 0 0 18px var(--gold-glow);
+  }
+  .overlay p { color: var(--text-secondary); margin: 0 0 18px; font-size: 14px; }
+  .overlay .btn-row { display: flex; gap: 10px; width: 100%; }
+
+  /* ===== نافذة التأكيد ===== */
+  .confirm-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+    padding: 20px;
+  }
+  .confirm-backdrop.show { opacity: 1; pointer-events: all; }
+  .confirm-box {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-board);
+    padding: 22px;
+    width: 100%; max-width: 320px;
+    text-align: center;
+    box-shadow: 0 20px 50px -20px rgba(0,0,0,0.7);
+  }
+  .confirm-box p { font-weight: 700; margin: 0 0 16px; }
+  .confirm-box .btn-row { display: flex; gap: 10px; }
+
+  /* ===== لوحة الإعدادات ===== */
+  .settings-panel {
+    background: var(--board-bg);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-board);
+    padding: 16px;
+    margin-top: 16px;
+    display: none;
+  }
+  .settings-panel.show { display: block; }
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 4px;
+  }
+  .setting-row + .setting-row { border-top: 1px solid rgba(255,255,255,0.06); }
+  .switch {
+    width: 46px; height: 26px;
+    background: var(--disabled);
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    border: none;
+    flex-shrink: 0;
+  }
+  .switch.on { background: linear-gradient(180deg, var(--accent), var(--accent-2)); }
+  .switch::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 20px; height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+  }
+  .switch.on::after { transform: translateX(20px); }
+
+  .hint {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin-top: 14px;
+  }
+
+  /* ===== نظام الشاشات (Splash / Home / Game) ===== */
+  .screen { display: none; width: 100%; max-width: 420px; position: relative; }
+  .screen.active { display: block; }
+
+  /* ----- Splash ----- */
+  #splashScreen.active {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 50% 20%, var(--bg-glow) 0%, var(--bg) 60%);
+    z-index: 50;
+    padding: 40px 24px;
+    text-align: center;
+    animation: splashFadeOut 0.4s ease 1.4s forwards;
+  }
+  @keyframes splashFadeOut { to { opacity: 0; pointer-events: none; } }
+  .splash-mark svg {
+    width: 84px; height: 84px;
+    animation: splashPulse 1.8s ease-in-out infinite;
+  }
+  @keyframes splashPulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 18px var(--gold-glow)); }
+    50% { transform: scale(1.06); filter: drop-shadow(0 0 32px var(--gold-glow)); }
+  }
+  .splash-title {
+    font-size: 34px; font-weight: 800; margin-top: 18px; letter-spacing: -0.5px;
+  }
+  .splash-title span {
+    background: linear-gradient(180deg, #FCE9A8 0%, var(--accent) 55%, var(--accent-2) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .splash-tagline {
+    color: var(--text-secondary);
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    margin-top: 6px;
+    text-transform: uppercase;
+  }
+  .splash-loader {
+    width: 180px; height: 4px;
+    background: var(--board-bg);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 46px;
+  }
+  .splash-loader-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-2), var(--accent));
+    width: 0%;
+    animation: loaderFill 1.3s ease-out forwards;
+  }
+  @keyframes loaderFill { from { width: 0%; } to { width: 100%; } }
+  .splash-loading-text {
+    color: var(--text-secondary);
+    font-size: 11px;
+    margin-top: 10px;
+    letter-spacing: 1px;
+  }
+
+  /* ----- Home ----- */
+  #homeScreen.active { display: flex; flex-direction: column; align-items: stretch; }
+  .home-topbar { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+  .home-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--board-bg);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 6px 12px;
+    font-size: 13px; font-weight: 800;
+    color: var(--accent);
+  }
+  .home-hero { text-align: center; margin: 10px 0 22px; }
+  .home-hero-mark svg { width: 54px; height: 54px; filter: drop-shadow(0 0 14px var(--gold-glow)); }
+  .home-hero-title {
+    font-size: 40px; font-weight: 800; letter-spacing: -0.5px; margin-top: 10px;
+  }
+  .home-hero-title span {
+    background: linear-gradient(180deg, #FCE9A8 0%, var(--accent) 55%, var(--accent-2) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .home-hero-tagline {
+    color: var(--text-secondary);
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+  .home-card {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--board-bg);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-btn);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+  .home-card-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--empty-cell);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .home-card-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+  .home-card-value { font-size: 22px; font-weight: 800; margin-top: 2px; }
+
+  .home-primary-btn, .home-secondary-btn {
+    display: flex; align-items: center; gap: 14px;
+    border: none; border-radius: var(--radius-btn);
+    padding: 12px 16px;
+    cursor: pointer;
+    margin-bottom: 12px;
+    text-align: right;
+    transition: transform 0.1s ease;
+  }
+  .home-primary-btn:active, .home-secondary-btn:active { transform: scale(0.98); }
+  .home-primary-btn {
+    background: linear-gradient(180deg, #FCE9A8 0%, var(--accent) 45%, var(--accent-2) 100%);
+    box-shadow: 0 4px 14px var(--gold-glow);
+  }
+  .home-secondary-btn {
+    background: var(--board-bg);
+    border: 1px solid var(--border-soft);
+  }
+  .home-btn-icon {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .home-primary-btn .home-btn-icon { background: rgba(36,26,10,0.18); color: #241A0A; }
+  .home-secondary-btn .home-btn-icon { background: var(--empty-cell); color: var(--secondary-accent); }
+  .home-btn-text { display: flex; flex-direction: column; }
+  .home-primary-btn .home-btn-text b { color: #241A0A; font-size: 16px; }
+  .home-primary-btn .home-btn-text small { color: rgba(36,26,10,0.65); font-size: 11px; }
+  .home-secondary-btn .home-btn-text b { color: var(--text-primary); font-size: 15px; }
+  .home-secondary-btn .home-btn-text small { color: var(--text-secondary); font-size: 11px; }
+
+  .home-mini-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .home-mini-btn {
+    background: var(--board-bg);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-btn);
+    padding: 14px 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    color: var(--text-primary);
+    font-size: 12px; font-weight: 700;
+    cursor: pointer;
+  }
+  .home-mini-btn span { font-size: 18px; color: var(--accent); }
+
+  .home-bottom-row { display: flex; align-items: center; justify-content: space-between; padding: 0 6px; }
+  .home-bottom-btn {
+    background: none; border: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: var(--text-secondary); font-size: 10px; font-weight: 700;
+  }
+  .home-bottom-btn span { font-size: 16px; }
+  .home-bottom-btn-center {
+    width: 50px; height: 50px; border-radius: 50%;
+    background: var(--board-bg);
+    border: 1px solid var(--border-soft);
+    justify-content: center;
+    color: var(--accent);
+  }
+  .home-bottom-btn-center span { font-size: 18px; }
+
+  /* ----- نافذة أزرار الرجوع داخل شاشة اللعبة ----- */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-soft);
+    color: var(--text-primary);
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-size: 13px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 60;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+
+  /* ----- نافذة "طريقة اللعب" ----- */
+  .howto-steps { text-align: right; margin: 0 0 18px; padding: 0; list-style: none; }
+  .howto-steps li {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--board-bg);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .howto-steps .howto-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: #241A0A;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; flex-shrink: 0;
+  }
+  .howto-example {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin-bottom: 18px; font-weight: 800; font-size: 18px;
+  }
+  .howto-example .mini-tile {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--tile-2-bg); color: var(--tile-2-fg); font-size: 16px;
+  }
+
+  /* ----- نافذة اختيار الثيم ----- */
+  .theme-option {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--board-bg);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-btn);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    text-align: right;
+    transition: transform 0.1s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+  .theme-option:active { transform: scale(0.98); }
+  .theme-option.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--gold-glow);
+  }
+  .theme-swatch {
+    width: 40px; height: 40px; border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.18), 0 4px 10px -4px rgba(0,0,0,0.5);
+  }
+  .swatch-vault  { background: linear-gradient(135deg, #0B0F1F 45%, #F2B705 100%); }
+  .swatch-royal  { background: linear-gradient(135deg, #170B2E 45%, #B565F2 100%); }
+  .swatch-garden { background: linear-gradient(135deg, #07211D 45%, #34D399 100%); }
+  .theme-option-text { display: flex; flex-direction: column; flex: 1; }
+  .theme-option-text b { font-size: 14px; color: var(--text-primary); }
+  .theme-option-text small { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .theme-check {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 1px solid var(--border-soft);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent); font-size: 12px; font-weight: 800;
+    flex-shrink: 0;
+  }
+  .theme-option.active .theme-check { background: var(--accent); color: #241A0A; border-color: var(--accent); }
+
+  /* ===== زخارف الثيمات — عناصر بصرية فعلية (ليست مجرد ألوان) ===== */
+  .theme-decor {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  html[data-theme="royal"] .decor-royal { opacity: 1; }
+  html[data-theme="garden"] .decor-garden { opacity: 1; }
+
+  /* ----- زخرفة "القصر الملكي": قوس حجري + عمودان + لمعات ----- */
+  .royal-arch {
+    position: absolute;
+    top: -160px; left: 50%;
+    transform: translateX(-50%);
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    border: 3px solid rgba(181, 101, 242, 0.5);
+    box-shadow: 0 0 50px var(--gold-glow), inset 0 0 50px rgba(181, 101, 242, 0.18);
+  }
+  .royal-pillar {
+    position: absolute;
+    top: 6%; bottom: 6%;
+    width: 18px;
+    background: repeating-linear-gradient(180deg,
+      rgba(242, 183, 5, 0.45) 0 3px,
+      rgba(242, 183, 5, 0.06) 3px 10px);
+    border-radius: 9px;
+    box-shadow: 0 0 26px var(--gold-glow);
+    opacity: 0.6;
+  }
+  .royal-pillar::before, .royal-pillar::after {
+    content: '';
+    position: absolute; left: -6px; right: -6px; height: 10px;
+    background: linear-gradient(180deg, #FCE9A8, var(--accent-2));
+    border-radius: 4px;
+    opacity: 0.7;
+  }
+  .royal-pillar::before { top: -8px; }
+  .royal-pillar::after { bottom: -8px; }
+  .royal-pillar-left { left: 2%; }
+  .royal-pillar-right { right: 2%; }
+  .royal-sparkle {
+    position: absolute;
+    width: 7px; height: 7px;
+    background: var(--accent);
+    transform: rotate(45deg);
+    box-shadow: 0 0 10px var(--gold-glow);
+    opacity: 0.85;
+    animation: sparkleTwinkle 2.4s ease-in-out infinite;
+  }
+  @keyframes sparkleTwinkle {
+    0%, 100% { opacity: 0.85; transform: rotate(45deg) scale(1); }
+    50% { opacity: 0.25; transform: rotate(45deg) scale(0.7); }
+  }
+  .royal-sparkle.s1 { top: 10%; left: 14%; animation-delay: 0s; }
+  .royal-sparkle.s2 { top: 22%; right: 16%; animation-delay: 0.8s; }
+  .royal-sparkle.s3 { top: 8%; right: 30%; animation-delay: 1.5s; }
+
+  /* ----- زخرفة "الحديقة الزمردية": دوالي وأوراق ذهبية ----- */
+  .garden-vine {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 76px;
+    background-repeat: repeat-y;
+    background-size: 76px 230px;
+    opacity: 0.4;
+  }
+  .garden-vine-left {
+    left: -6px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 76 230'%3E%3Cpath d='M14 0 C46 32 10 64 42 96 C10 128 46 160 14 192 C40 210 22 222 34 230' stroke='%2334D399' stroke-width='3' fill='none' opacity='0.55'/%3E%3Cellipse cx='40' cy='42' rx='12' ry='6' fill='%23F2B705' opacity='0.55' transform='rotate(28 40 42)'/%3E%3Cellipse cx='16' cy='100' rx='12' ry='6' fill='%2334D399' opacity='0.55' transform='rotate(-24 16 100)'/%3E%3Cellipse cx='40' cy='158' rx='12' ry='6' fill='%23F2B705' opacity='0.5' transform='rotate(28 40 158)'/%3E%3Cellipse cx='18' cy='205' rx='10' ry='5' fill='%2334D399' opacity='0.5' transform='rotate(-18 18 205)'/%3E%3C/svg%3E");
+  }
+  .garden-vine-right {
+    right: -6px;
+    transform: scaleX(-1);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 76 230'%3E%3Cpath d='M14 0 C46 32 10 64 42 96 C10 128 46 160 14 192 C40 210 22 222 34 230' stroke='%2334D399' stroke-width='3' fill='none' opacity='0.55'/%3E%3Cellipse cx='40' cy='42' rx='12' ry='6' fill='%23F2B705' opacity='0.55' transform='rotate(28 40 42)'/%3E%3Cellipse cx='16' cy='100' rx='12' ry='6' fill='%2334D399' opacity='0.55' transform='rotate(-24 16 100)'/%3E%3Cellipse cx='40' cy='158' rx='12' ry='6' fill='%23F2B705' opacity='0.5' transform='rotate(28 40 158)'/%3E%3Cellipse cx='18' cy='205' rx='10' ry='5' fill='%2334D399' opacity='0.5' transform='rotate(-18 18 205)'/%3E%3C/svg%3E");
+  }
+
+  /* ----- تاج فوق العنوان (يظهر فقط في ثيم "القصر الملكي") ----- */
+  .home-crown { display: none; justify-content: center; margin-bottom: 4px; filter: drop-shadow(0 0 12px var(--gold-glow)); }
+  .home-crown svg { width: 36px; height: 36px; }
+  html[data-theme="royal"] .home-crown { display: flex; }
+  .splash-crown { display: none; justify-content: center; margin-bottom: 10px; filter: drop-shadow(0 0 14px var(--gold-glow)); }
+  .splash-crown svg { width: 40px; height: 40px; }
+  html[data-theme="royal"] .splash-crown { display: flex; }
+</style>
+</head>
+<body>
+
+<!-- ===================== SPLASH SCREEN ===================== -->
+<div class="screen" id="splashScreen">
+  <div class="theme-decor decor-royal">
+    <div class="royal-arch"></div>
+    <div class="royal-pillar royal-pillar-left"></div>
+    <div class="royal-pillar royal-pillar-right"></div>
+    <div class="royal-sparkle s1"></div>
+    <div class="royal-sparkle s2"></div>
+    <div class="royal-sparkle s3"></div>
+  </div>
+  <div class="theme-decor decor-garden">
+    <div class="garden-vine garden-vine-left"></div>
+    <div class="garden-vine garden-vine-right"></div>
+  </div>
+  <div class="splash-crown" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 8l4.2 3 4.8-6 4.8 6 4.2-3-2 9H5L3 8z" fill="url(#crownGradSplash)"/>
+      <defs>
+        <linearGradient id="crownGradSplash" x1="3" y1="5" x2="21" y2="17" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#FCE9A8"/>
+          <stop offset="0.55" stop-color="#F2B705"/>
+          <stop offset="1" stop-color="#E8940A"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+  <div class="splash-mark">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2 L20 9 L12 22 L4 9 Z" fill="url(#logoGradSplash)"/>
+      <path d="M12 2 L20 9 L12 12.5 L4 9 Z" fill="#FFFFFF" opacity="0.25"/>
+      <defs>
+        <linearGradient id="logoGradSplash" x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#FCE9A8"/>
+          <stop offset="0.55" stop-color="#F2B705"/>
+          <stop offset="1" stop-color="#E8940A"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+  <div class="splash-title">Merge<span>Grid</span></div>
+  <div class="splash-tagline">ادمج بذكاء. ابنِ الأكبر.</div>
+  <div class="splash-loader"><div class="splash-loader-bar"></div></div>
+  <div class="splash-loading-text">جارِ التحميل...</div>
+</div>
+
+<!-- ===================== HOME SCREEN ===================== -->
+<div class="screen" id="homeScreen">
+  <div class="theme-decor decor-royal">
+    <div class="royal-arch"></div>
+    <div class="royal-pillar royal-pillar-left"></div>
+    <div class="royal-pillar royal-pillar-right"></div>
+    <div class="royal-sparkle s1"></div>
+    <div class="royal-sparkle s2"></div>
+    <div class="royal-sparkle s3"></div>
+  </div>
+  <div class="theme-decor decor-garden">
+    <div class="garden-vine garden-vine-left"></div>
+    <div class="garden-vine garden-vine-right"></div>
+  </div>
+
+  <div class="home-topbar">
+    <div class="home-badge">🏆 <span id="homeBestBadge">0</span></div>
+  </div>
+
+  <div class="home-hero">
+    <div class="home-crown" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 8l4.2 3 4.8-6 4.8 6 4.2-3-2 9H5L3 8z" fill="url(#crownGradHome)"/>
+        <defs>
+          <linearGradient id="crownGradHome" x1="3" y1="5" x2="21" y2="17" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#FCE9A8"/>
+            <stop offset="0.55" stop-color="#F2B705"/>
+            <stop offset="1" stop-color="#E8940A"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <div class="home-hero-mark">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2 L20 9 L12 22 L4 9 Z" fill="url(#logoGradHome)"/>
+        <path d="M12 2 L20 9 L12 12.5 L4 9 Z" fill="#FFFFFF" opacity="0.25"/>
+        <defs>
+          <linearGradient id="logoGradHome" x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#FCE9A8"/>
+            <stop offset="0.55" stop-color="#F2B705"/>
+            <stop offset="1" stop-color="#E8940A"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <div class="home-hero-title">Merge<span>Grid</span></div>
+    <div class="home-hero-tagline">ادمج بذكاء. ابنِ الأكبر.</div>
+  </div>
+
+  <div class="home-card">
+    <div class="home-card-icon">🏆</div>
+    <div>
+      <div class="home-card-label">أفضل نتيجة</div>
+      <div class="home-card-value" id="homeBestValue">0</div>
+    </div>
+  </div>
+
+  <button class="home-primary-btn" id="homePlayBtn">
+    <span class="home-btn-icon">▶</span>
+    <span class="home-btn-text"><b>ابدأ اللعب</b><small>لعبة جديدة</small></span>
+  </button>
+
+  <button class="home-secondary-btn" id="homeContinueBtn" style="display:none;">
+    <span class="home-btn-icon">↺</span>
+    <span class="home-btn-text"><b>متابعة</b><small>آخر لعبة محفوظة</small></span>
+  </button>
+
+  <div class="home-mini-row">
+    <button class="home-mini-btn" id="homeSettingsBtn"><span>⚙</span>الإعدادات</button>
+    <button class="home-mini-btn" id="homeThemesBtn"><span>🎨</span>الثيمات</button>
+    <button class="home-mini-btn" id="homeHowToPlayBtn"><span>📖</span>طريقة اللعب</button>
+  </div>
+
+  <div class="home-bottom-row">
+    <button class="home-bottom-btn" id="homeRateBtn"><span>★</span>قيّم التطبيق</button>
+    <button class="home-bottom-btn home-bottom-btn-center" id="homeStatsBtn"><span>📊</span></button>
+    <button class="home-bottom-btn" id="homeShareBtn"><span>↗</span>مشاركة</button>
+  </div>
+</div>
+
+<!-- ===================== GAME SCREEN ===================== -->
+<div class="app screen" id="gameScreen">
+  <div class="topbar">
+    <button class="icon-btn" id="homeBackBtn" aria-label="الرئيسية">→</button>
+    <div class="logo">
+      <svg class="logo-mark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2 L20 9 L12 22 L4 9 Z" fill="url(#logoGrad)"/>
+        <path d="M12 2 L20 9 L12 12.5 L4 9 Z" fill="#FFFFFF" opacity="0.25"/>
+        <defs>
+          <linearGradient id="logoGrad" x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#FCE9A8"/>
+            <stop offset="0.55" stop-color="#F2B705"/>
+            <stop offset="1" stop-color="#E8940A"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      Merge<span>Grid</span>
+    </div>
+    <button class="icon-btn" id="settingsToggleBtn" aria-label="الإعدادات">⚙</button>
+  </div>
+
+  <div class="scores">
+    <div class="score-box">
+      <div class="score-label">النقاط</div>
+      <div class="score-value" id="scoreValue">0</div>
+      <div class="score-popup" id="scorePopup"></div>
+    </div>
+    <div class="score-box">
+      <div class="score-label">الأفضل</div>
+      <div class="score-value" id="bestValue">0</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-secondary" id="restartBtn">لعبة جديدة</button>
+  </div>
+
+  <div class="board-wrap" id="boardWrap">
+    <div class="cells-grid" id="cellsGrid"></div>
+    <div class="tiles-layer" id="tilesLayer"></div>
+
+    <div class="overlay" id="gameOverOverlay">
+      <h2>انتهت اللعبة</h2>
+      <p id="gameOverScoreText">النقاط: 0</p>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="tryAgainBtn">حاول مجددًا</button>
+      </div>
+    </div>
+
+    <div class="overlay" id="winOverlay">
+      <h2>✦ وصلت إلى 2048!</h2>
+      <p>هل تريد الاستمرار في اللعب؟</p>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="winNewGameBtn">لعبة جديدة</button>
+        <button class="btn btn-primary" id="winContinueBtn">استمرار</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="hint">اسحب في أي اتجاه للتحريك — أو استخدم أسهم الكيبورد</div>
+</div>
+
+<div class="confirm-backdrop" id="confirmBackdrop">
+  <div class="confirm-box">
+    <p>بدء لعبة جديدة؟</p>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="confirmCancelBtn">إلغاء</button>
+      <button class="btn btn-primary" id="confirmOkBtn">لعبة جديدة</button>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-backdrop" id="settingsBackdrop">
+  <div class="confirm-box" style="text-align:right;">
+    <p style="margin-bottom:12px;">الإعدادات</p>
+    <div class="setting-row">
+      <span>الصوت</span>
+      <button class="switch" id="soundSwitch"></button>
+    </div>
+    <div class="setting-row">
+      <span>الاهتزاز (Haptic)</span>
+      <button class="switch" id="hapticSwitch"></button>
+    </div>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-primary" id="settingsCloseBtn">تم</button>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-backdrop" id="howToBackdrop">
+  <div class="confirm-box">
+    <p style="margin-bottom:14px;">طريقة اللعب</p>
+    <ul class="howto-steps">
+      <li><span class="howto-num">1</span> اسحب في أي اتجاه لتحريك كل المربعات</li>
+      <li><span class="howto-num">2</span> عند اصطدام رقمين متشابهين يندمجان معًا</li>
+      <li><span class="howto-num">3</span> حاول الوصول لأعلى رقم ممكن قبل امتلاء اللوحة</li>
+    </ul>
+    <div class="howto-example">
+      <div class="mini-tile">2</div>
+      <span>+</span>
+      <div class="mini-tile">2</div>
+      <span>=</span>
+      <div class="mini-tile" style="background:var(--tile-4-bg); color:var(--tile-4-fg);">4</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="howToCloseBtn">فهمت</button>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-backdrop" id="themeBackdrop">
+  <div class="confirm-box" style="text-align:right;">
+    <p style="margin-bottom:14px;">اختر الثيم</p>
+
+    <button class="theme-option" data-theme="vault">
+      <div class="theme-swatch swatch-vault"></div>
+      <div class="theme-option-text"><b>الخزنة الذهبية</b><small>ذهبي وكحلي داكن</small></div>
+      <div class="theme-check">✓</div>
+    </button>
+
+    <button class="theme-option" data-theme="royal">
+      <div class="theme-swatch swatch-royal"></div>
+      <div class="theme-option-text"><b>القصر الملكي</b><small>بنفسجي وذهبي</small></div>
+      <div class="theme-check">✓</div>
+    </button>
+
+    <button class="theme-option" data-theme="garden">
+      <div class="theme-swatch swatch-garden"></div>
+      <div class="theme-option-text"><b>الحديقة الزمردية</b><small>أخضر زمردي وذهبي</small></div>
+      <div class="theme-check">✓</div>
+    </button>
+
+    <div class="btn-row" style="margin-top:6px;">
+      <button class="btn btn-primary" id="themeCloseBtn">تم</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+
+  // ===================== الثوابت (مطابقة لـ game_constants.dart) =====================
+  const BOARD_SIZE = 4;
+  const SPAWN_PROBABILITIES = { 2: 0.9, 4: 0.1 };
+  const WIN_VALUE = 2048;
+  const MIN_SWIPE_DISTANCE = 24; // بكسل
+
+  const TILE_COLORS = {
+    2:    { bg: 'var(--tile-2-bg)',    fg: 'var(--tile-2-fg)' },
+    4:    { bg: 'var(--tile-4-bg)',    fg: 'var(--tile-4-fg)' },
+    8:    { bg: 'var(--tile-8-bg)',    fg: 'var(--tile-8-fg)' },
+    16:   { bg: 'var(--tile-16-bg)',   fg: 'var(--tile-16-fg)' },
+    32:   { bg: 'var(--tile-32-bg)',   fg: 'var(--tile-32-fg)' },
+    64:   { bg: 'var(--tile-64-bg)',   fg: 'var(--tile-64-fg)' },
+    128:  { bg: 'var(--tile-128-bg)',  fg: 'var(--tile-128-fg)' },
+    256:  { bg: 'var(--tile-256-bg)',  fg: 'var(--tile-256-fg)' },
+    512:  { bg: 'var(--tile-512-bg)',  fg: 'var(--tile-512-fg)' },
+    1024: { bg: 'var(--tile-1024-bg)', fg: 'var(--tile-1024-fg)' },
+    2048: { bg: 'var(--tile-2048-bg)', fg: 'var(--tile-2048-fg)' },
+  };
+  function tileColor(value) {
+    return TILE_COLORS[value] || { bg: 'var(--tile-overflow-bg)', fg: 'var(--tile-overflow-fg)' };
+  }
+  function tileFontSize(value) {
+    const len = String(value).length;
+    if (len <= 2) return '32px';
+    if (len === 3) return '26px';
+    if (len === 4) return '20px';
+    return '16px';
+  }
+
+  // ===================== حالة اللعبة =====================
+  let board = [];          // مصفوفة 4x4 من الأرقام (0 = فارغ)
+  let score = 0;
+  let best = Number(localStorage.getItem('mergeGrid.best') || 0);
+  let hasWon = false;      // هل وصل اللاعب لقيمة الفوز خلال هذه اللعبة
+  let wonDialogShown = false;
+  let isGameOver = false;
+  let tileIdCounter = 1;
+  let tiles = [];          // [{id, row, col, value, isNew, isMerged}]
+  let soundOn = localStorage.getItem('mergeGrid.sound') !== 'off';
+  let hapticOn = localStorage.getItem('mergeGrid.haptic') !== 'off';
+  let currentTheme = localStorage.getItem('mergeGrid.theme') || 'royal';
+
+  // ===================== عناصر DOM =====================
+  const splashScreen = document.getElementById('splashScreen');
+  const homeScreen = document.getElementById('homeScreen');
+  const gameScreen = document.getElementById('gameScreen');
+  const homeBestBadge = document.getElementById('homeBestBadge');
+  const homeBestValue = document.getElementById('homeBestValue');
+  const homeContinueBtn = document.getElementById('homeContinueBtn');
+  const settingsBackdrop = document.getElementById('settingsBackdrop');
+  const howToBackdrop = document.getElementById('howToBackdrop');
+  const themeBackdrop = document.getElementById('themeBackdrop');
+  const toastEl = document.getElementById('toast');
+
+  const cellsGrid = document.getElementById('cellsGrid');
+  const tilesLayer = document.getElementById('tilesLayer');
+  const scoreValueEl = document.getElementById('scoreValue');
+  const bestValueEl = document.getElementById('bestValue');
+  const scorePopupEl = document.getElementById('scorePopup');
+  const gameOverOverlay = document.getElementById('gameOverOverlay');
+  const winOverlay = document.getElementById('winOverlay');
+  const gameOverScoreText = document.getElementById('gameOverScoreText');
+  const confirmBackdrop = document.getElementById('confirmBackdrop');
+  const soundSwitch = document.getElementById('soundSwitch');
+  const hapticSwitch = document.getElementById('hapticSwitch');
+
+  // بناء خلفية الخلايا الفارغة (16 خلية) مرة واحدة فقط
+  for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+    const c = document.createElement('div');
+    c.className = 'empty-cell';
+    cellsGrid.appendChild(c);
+  }
+
+  // ===================== حفظ واسترجاع اللعبة (لدعم Continue من الشاشة الرئيسية) =====================
+  const SAVE_KEY = 'mergeGrid.savedGame';
+
+  function saveGame() {
+    const data = {
+      boardValues: boardFromTiles(),
+      score,
+      hasWon,
+      wonDialogShown,
+      isGameOver,
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+  }
+
+  function hasSavedGame() {
+    return localStorage.getItem(SAVE_KEY) !== null;
+  }
+
+  function loadGame() {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) { newGame(); return; }
+    let data;
+    try { data = JSON.parse(raw); } catch (e) { newGame(); return; }
+
+    tiles = [];
+    let id = tileIdCounter;
+    for (let r = 0; r < BOARD_SIZE; r++) {
+      for (let c = 0; c < BOARD_SIZE; c++) {
+        const v = data.boardValues[r][c];
+        if (v !== 0) tiles.push({ id: id++, row: r, col: c, value: v, isNew: false, isMerged: false });
+      }
+    }
+    tileIdCounter = id;
+    score = data.score || 0;
+    hasWon = !!data.hasWon;
+    wonDialogShown = !!data.wonDialogShown;
+    isGameOver = !!data.isGameOver;
+    board = boardFromTiles();
+
+    // تفريغ عناصر الـ DOM القديمة قبل رسم اللعبة المحمّلة
+    tilesLayer.innerHTML = '';
+    tileElements.clear();
+
+    gameOverOverlay.classList.remove('show');
+    winOverlay.classList.remove('show');
+    render();
+
+    if (isGameOver) {
+      gameOverScoreText.textContent = 'النقاط: ' + score;
+      gameOverOverlay.classList.add('show');
+    }
+  }
+
+  // ===================== التنقل بين الشاشات =====================
+  function showScreen(el) {
+    [splashScreen, homeScreen, gameScreen].forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function refreshHomeScreen() {
+    homeBestBadge.textContent = String(best);
+    homeBestValue.textContent = String(best);
+    homeContinueBtn.style.display = hasSavedGame() ? 'flex' : 'none';
+  }
+
+  function goHome() {
+    refreshHomeScreen();
+    showScreen(homeScreen);
+  }
+
+  function showToast(message) {
+    toastEl.textContent = message;
+    toastEl.classList.remove('show');
+    void toastEl.offsetWidth;
+    toastEl.classList.add('show');
+    setTimeout(() => toastEl.classList.remove('show'), 1600);
+  }
+
+  // ===================== منطق اللعبة الصرف (قابل للاختبار بمعزل عن DOM) =====================
+  function createEmptyBoard() {
+    return Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(0));
+  }
+
+  function boardsEqual(a, b) {
+    for (let r = 0; r < BOARD_SIZE; r++)
+      for (let c = 0; c < BOARD_SIZE; c++)
+        if (a[r][c] !== b[r][c]) return false;
+    return true;
+  }
+
+  function cloneBoard(b) {
+    return b.map(row => row.slice());
+  }
+
+  function randomSpawnValue() {
+    return Math.random() < SPAWN_PROBABILITIES[2] ? 2 : 4;
+  }
+
+  function getEmptyCells(b) {
+    const cells = [];
+    for (let r = 0; r < BOARD_SIZE; r++)
+      for (let c = 0; c < BOARD_SIZE; c++)
+        if (b[r][c] === 0) cells.push([r, c]);
+    return cells;
+  }
+
+  function spawnRandomTile(b) {
+    const empty = getEmptyCells(b);
+    if (empty.length === 0) return null;
+    const [r, c] = empty[Math.floor(Math.random() * empty.length)];
+    const value = randomSpawnValue();
+    b[r][c] = value;
+    return { row: r, col: c, value };
+  }
+
+  // دمج صف واحد نحو اليسار — القاعدة الأساسية لكل الاتجاهات الأربعة.
+  // لا يسمح بدمج نفس الـ Tile أكثر من مرة في نفس الحركة.
+  function mergeRowLeft(row) {
+    const values = row.filter(v => v !== 0);
+    const result = [];
+    let gained = 0;
+    let i = 0;
+    while (i < values.length) {
+      if (i + 1 < values.length && values[i] === values[i + 1]) {
+        const merged = values[i] * 2;
+        result.push(merged);
+        gained += merged;
+        i += 2;
+      } else {
+        result.push(values[i]);
+        i += 1;
+      }
+    }
+    while (result.length < BOARD_SIZE) result.push(0);
+    return { row: result, gained };
+  }
+
+  function transpose(b) {
+    const t = createEmptyBoard();
+    for (let r = 0; r < BOARD_SIZE; r++)
+      for (let c = 0; c < BOARD_SIZE; c++)
+        t[c][r] = b[r][c];
+    return t;
+  }
+
+  function reverseRows(b) {
+    return b.map(row => row.slice().reverse());
+  }
+
+  function canMove(b) {
+    if (getEmptyCells(b).length > 0) return true;
+    for (let r = 0; r < BOARD_SIZE; r++) {
+      for (let c = 0; c < BOARD_SIZE; c++) {
+        const v = b[r][c];
+        if (c + 1 < BOARD_SIZE && b[r][c + 1] === v) return true;
+        if (r + 1 < BOARD_SIZE && b[r + 1][c] === v) return true;
+      }
+    }
+    return false;
+  }
+
+  // ===================== ربط منطق اللعبة بعرض الـ Tiles (مع تتبع الهوية للـ Animation) =====================
+  // كل tile يحافظ على نفس الـ id طوال حركته عبر اللوحة، بدل إعادة توليده من
+  // جديد في كل حركة. هذا هو ما يتيح لعنصر الـ DOM المطابق أن ينزلق فعليًا
+  // (transform transition) بدل أن "يقفز" فجأة لمكانه الجديد.
+
+  function boardFromTiles() {
+    const b = createEmptyBoard();
+    for (const t of tiles) b[t.row][t.col] = t.value;
+    return b;
+  }
+
+  // يرجع، لكل "خط" (صف أو عمود) بحسب اتجاه الحركة، قائمة الإحداثيات [r, c]
+  // مرتبة من الحافة التي تتحرك نحوها التايلز إلى الحافة المقابلة.
+  function linePositions(direction, lineIndex) {
+    const positions = [];
+    for (let i = 0; i < BOARD_SIZE; i++) {
+      let r, c;
+      if (direction === 'left') { r = lineIndex; c = i; }
+      else if (direction === 'right') { r = lineIndex; c = BOARD_SIZE - 1 - i; }
+      else if (direction === 'up') { r = i; c = lineIndex; }
+      else { r = BOARD_SIZE - 1 - i; c = lineIndex; } // down
+      positions.push([r, c]);
+    }
+    return positions;
+  }
+
+  // ينفّذ الحركة مباشرة على مصفوفة الـ tiles نفسها، محافظًا على هوية (id) كل
+  // مربع باقٍ، ويحذف فقط الـ tile الذي تم دمجه داخل تايل آخر.
+  function moveTiles(direction) {
+    const tilesByPos = new Map();
+    for (const t of tiles) tilesByPos.set(t.row + ',' + t.col, t);
+
+    const removedIds = new Set();
+    let gained = 0;
+    let moved = false;
+
+    for (let lineIndex = 0; lineIndex < BOARD_SIZE; lineIndex++) {
+      const positions = linePositions(direction, lineIndex);
+      const lineTiles = [];
+      for (const [r, c] of positions) {
+        const key = r + ',' + c;
+        if (tilesByPos.has(key)) lineTiles.push(tilesByPos.get(key));
+      }
+
+      let writeIndex = 0;
+      let i = 0;
+      while (i < lineTiles.length) {
+        const cur = lineTiles[i];
+        const next = lineTiles[i + 1];
+        const [nr, nc] = positions[writeIndex];
+
+        if (next && next.value === cur.value) {
+          if (cur.row !== nr || cur.col !== nc) moved = true;
+          cur.row = nr; cur.col = nc;
+          cur.value = cur.value * 2;
+          cur.isMerged = true;
+          cur.isNew = false;
+          gained += cur.value;
+          removedIds.add(next.id);
+          moved = true;
+          i += 2;
+        } else {
+          if (cur.row !== nr || cur.col !== nc) moved = true;
+          cur.row = nr; cur.col = nc;
+          cur.isMerged = false;
+          i += 1;
+        }
+        writeIndex++;
+      }
+    }
+
+    if (removedIds.size > 0) {
+      tiles = tiles.filter(t => !removedIds.has(t.id));
+    }
+
+    return { gained, moved };
+  }
+
+  function move(direction) {
+    if (isGameOver) return;
+
+    const { gained, moved } = moveTiles(direction);
+    if (!moved) return; // حركة غير قانونية: لا تغيير، لا نقاط، لا Tile جديد
+
+    score += gained;
+    if (score > best) {
+      best = score;
+      localStorage.setItem('mergeGrid.best', String(best));
+    }
+
+    const currentBoard = boardFromTiles();
+    const spawned = spawnRandomTile(currentBoard);
+    if (spawned) {
+      tiles.push({
+        id: tileIdCounter++,
+        row: spawned.row,
+        col: spawned.col,
+        value: spawned.value,
+        isNew: true,
+        isMerged: false,
+      });
+    }
+
+    render();
+    if (gained > 0) showScorePopup(gained);
+    playHaptic();
+
+    const mergeCount = tiles.filter(t => t.isMerged).length;
+    if (mergeCount > 0) playTableKnock(mergeCount);
+
+    board = boardFromTiles();
+
+    if (!hasWon && hasTileValue(WIN_VALUE)) {
+      hasWon = true;
+    }
+    if (hasWon && !wonDialogShown) {
+      wonDialogShown = true;
+      winOverlay.classList.add('show');
+    }
+    if (!canMove(board)) {
+      isGameOver = true;
+      gameOverScoreText.textContent = 'النقاط: ' + score;
+      gameOverOverlay.classList.add('show');
+    }
+
+    saveGame();
+  }
+
+  function hasTileValue(v) {
+    return tiles.some(t => t.value >= v);
+  }
+
+  // خريطة تحتفظ بعناصر DOM الحالية لكل tile حسب الـ id، حتى يتم تحديث
+  // موضعها (transform) بدل إعادة إنشائها في كل render — هذا ما يفعّل فعليًا
+  // انتقال (transition) الحركة بسلاسة عالية بدل القفز الفوري.
+  const tileElements = new Map();
+
+  // نسبة translate() المئوية تُحسب بالنسبة لحجم العنصر نفسه وليس حاويته —
+  // لذلك لا يمكن الاعتماد على "%" داخل transform لتحديد موضع الخلية على
+  // الشبكة. كما أن الصفحة RTL، وشبكة الخلايا الخلفية (CSS Grid) تعكس ترتيب
+  // الأعمدة بصريًا (أول عنصر في DOM يظهر أقصى اليمين لا اليسار) — لذلك لا يصح
+  // افتراض اتجاه ثابت واحتساب "خطوة" عامة. بدلًا من ذلك: نقرأ الموضع الفعلي
+  // لكل خلية بعينها من الشبكة الخلفية الحقيقية، فتُطابق مواضع المربعات دائمًا
+  // اتجاه العرض الفعلي (RTL أو LTR) بلا افتراضات.
+  function getCellRects() {
+    const layerRect = tilesLayer.getBoundingClientRect();
+    const rects = [];
+    for (let i = 0; i < cellsGrid.children.length; i++) {
+      const r = cellsGrid.children[i].getBoundingClientRect();
+      rects.push({
+        x: r.left - layerRect.left,
+        y: r.top - layerRect.top,
+        size: r.width,
+      });
+    }
+    return rects;
+  }
+
+  // ===================== الرسم (Render) =====================
+  function render() {
+    const cellRects = getCellRects();
+    const firstCell = cellRects[0];
+
+    // حماية: إذا استُدعيت render() قبل أن تصبح الشبكة مرئية فعليًا (أبعاد صفرية،
+    // مثلًا لأن الشاشة لا تزال display:none)، نؤجل الرسم لأقرب فريم بدل تثبيت
+    // مواضع خاطئة على المربعات.
+    if (!firstCell || firstCell.size <= 0) {
+      requestAnimationFrame(render);
+      return;
+    }
+
+    const liveIds = new Set();
+
+    for (const t of tiles) {
+      liveIds.add(t.id);
+      let el = tileElements.get(t.id);
+      const cell = cellRects[t.row * BOARD_SIZE + t.col];
+      const cellPx = cell.size;
+      const translate = `translate(${cell.x.toFixed(2)}px, ${cell.y.toFixed(2)}px)`;
+
+      if (!el) {
+        // عنصر جديد كليًا: ننشئه في موضعه مباشرة (بدون انتقال حركي، فهو أصلًا سيظهر بأنيميشن spawn)
+        el = document.createElement('div');
+        el.className = 'tile';
+        el.style.width = cellPx + 'px';
+        el.style.height = cellPx + 'px';
+
+        const inner = document.createElement('div');
+        inner.className = 'tile-inner';
+        el.appendChild(inner);
+
+        tilesLayer.appendChild(el);
+        tileElements.set(t.id, el);
+        el.style.transform = translate;
+      } else {
+        // عنصر موجود: مجرد تحديث الـ transform يشغّل الـ transition تلقائيًا بسلاسة GPU
+        el.style.width = cellPx + 'px';
+        el.style.height = cellPx + 'px';
+        el.style.transform = translate;
+      }
+
+      el.classList.toggle('new', !!t.isNew);
+      el.classList.toggle('merged', !!t.isMerged);
+
+      const inner = el.firstElementChild;
+      const colors = tileColor(t.value);
+      inner.style.background = colors.bg;
+      inner.style.color = colors.fg;
+      inner.style.fontSize = tileFontSize(t.value);
+      inner.textContent = t.value;
+      // تأخير بسيط لظهور المربع الجديد حتى تكتمل حركة انزلاق بقية المربعات أولًا
+      inner.style.animationDelay = t.isNew ? '0.12s' : '0s';
+    }
+
+    // إزالة عناصر الـ tiles التي لم تعد موجودة (بعد اندماجها ضمن مربع آخر)
+    for (const [id, el] of tileElements) {
+      if (!liveIds.has(id)) {
+        el.remove();
+        tileElements.delete(id);
+      }
+    }
+
+    scoreValueEl.textContent = String(score);
+    bestValueEl.textContent = String(best);
+
+    // إزالة أعلام new/merged بعد الرسم حتى لا تتكرر الـ Animation في كل render
+    setTimeout(() => { tiles.forEach(t => { t.isNew = false; t.isMerged = false; }); }, 260);
+  }
+
+  function showScorePopup(amount) {
+    scorePopupEl.textContent = '+' + amount;
+    scorePopupEl.classList.remove('show');
+    void scorePopupEl.offsetWidth; // إعادة تشغيل الـ Animation
+    scorePopupEl.classList.add('show');
+  }
+
+  // ===================== الصوت: طرقة طاولة عند الدمج =====================
+  // صوت مُركَّب بالكامل عبر Web Audio API (لا يحتاج أي ملف خارجي، ويعمل حتى
+  // بدون إنترنت): طبقة "ثمب" منخفضة التردد (اهتزاز الخشب) + طبقة ضجيج قصيرة
+  // مُصفّاة (اصطدام السطح) لمحاكاة صوت طرقة على طاولة.
+  let audioCtx = null;
+  function ensureAudioCtx() {
+    if (audioCtx) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audioCtx = new AC();
+    return audioCtx;
+  }
+  // فتح الصوت عند أول تفاعل من المستخدم (متطلبات سياسات التشغيل التلقائي بالمتصفح)
+  ['pointerdown', 'keydown', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, ensureAudioCtx, { once: true, passive: true });
+  });
+
+  function playTableKnock(strength) {
+    if (!soundOn) return;
+    const ctx = ensureAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const amp = Math.min(1 + (strength - 1) * 0.18, 1.7);
+
+    // طبقة الثمب المنخفض (جسم الطاولة يهتز)
+    const thumpOsc = ctx.createOscillator();
+    thumpOsc.type = 'sine';
+    thumpOsc.frequency.setValueAtTime(150, now);
+    thumpOsc.frequency.exponentialRampToValueAtTime(48, now + 0.11);
+
+    const thumpGain = ctx.createGain();
+    thumpGain.gain.setValueAtTime(0.001, now);
+    thumpGain.gain.exponentialRampToValueAtTime(0.55 * amp, now + 0.008);
+    thumpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+
+    thumpOsc.connect(thumpGain).connect(ctx.destination);
+    thumpOsc.start(now);
+    thumpOsc.stop(now + 0.18);
+
+    // طبقة الطرقة (اصطدام سطح صلب) — ضجيج قصير جدًا مُصفّى
+    const noiseDuration = 0.045;
+    const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * noiseDuration));
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+
+    const noiseFilter = ctx.createBiquadFilter();
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.value = 900;
+    noiseFilter.Q.value = 0.6;
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.32 * amp, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + noiseDuration);
+
+    noise.connect(noiseFilter).connect(noiseGain).connect(ctx.destination);
+    noise.start(now);
+  }
+
+  function playHaptic() {
+    if (hapticOn && navigator.vibrate) navigator.vibrate(10);
+  }
+
+  // ===================== بدء لعبة جديدة =====================
+  function newGame() {
+    tiles = [];
+    score = 0;
+    hasWon = false;
+    wonDialogShown = false;
+    isGameOver = false;
+    gameOverOverlay.classList.remove('show');
+    winOverlay.classList.remove('show');
+
+    // تفريغ عناصر الـ DOM الخاصة باللعبة السابقة قبل بدء لعبة جديدة
+    tilesLayer.innerHTML = '';
+    tileElements.clear();
+
+    const b = createEmptyBoard();
+    for (let i = 0; i < 2; i++) {
+      const spawned = spawnRandomTile(b);
+      tiles.push({ id: tileIdCounter++, row: spawned.row, col: spawned.col, value: spawned.value, isNew: true, isMerged: false });
+    }
+    board = b;
+    render();
+    saveGame();
+  }
+
+  // ===================== التحكم: لوحة المفاتيح =====================
+  window.addEventListener('keydown', (e) => {
+    const map = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
+    if (map[e.key]) {
+      e.preventDefault();
+      move(map[e.key]);
+    }
+  });
+
+  // ===================== التحكم: السحب باللمس =====================
+  const boardWrap = document.getElementById('boardWrap');
+  let touchStartX = 0, touchStartY = 0, touchHandled = false;
+
+  boardWrap.addEventListener('touchstart', (e) => {
+    const t = e.changedTouches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+    touchHandled = false;
+  }, { passive: true });
+
+  boardWrap.addEventListener('touchmove', (e) => {
+    if (touchHandled) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartX;
+    const dy = t.clientY - touchStartY;
+    if (Math.abs(dx) < MIN_SWIPE_DISTANCE && Math.abs(dy) < MIN_SWIPE_DISTANCE) return;
+
+    touchHandled = true;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      move(dx > 0 ? 'right' : 'left');
+    } else {
+      move(dy > 0 ? 'down' : 'up');
+    }
+  }, { passive: true });
+
+  // دعم الماوس على سطح المكتب لتجربة اللعبة بدون لمس
+  let mouseDown = false, mouseStartX = 0, mouseStartY = 0, mouseHandled = false;
+  boardWrap.addEventListener('mousedown', (e) => {
+    mouseDown = true; mouseHandled = false;
+    mouseStartX = e.clientX; mouseStartY = e.clientY;
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!mouseDown || mouseHandled) return;
+    const dx = e.clientX - mouseStartX;
+    const dy = e.clientY - mouseStartY;
+    if (Math.abs(dx) < MIN_SWIPE_DISTANCE && Math.abs(dy) < MIN_SWIPE_DISTANCE) return;
+    mouseHandled = true;
+    if (Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? 'right' : 'left');
+    else move(dy > 0 ? 'down' : 'up');
+  });
+  window.addEventListener('mouseup', () => { mouseDown = false; });
+
+  // إعادة ضبط مواضع المربعات (بدون إعادة تشغيل أنيميشن الظهور/الدمج) عند
+  // تغيّر أبعاد الشبكة، مثل تدوير الجهاز أو تغيير حجم النافذة.
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (tiles.length) render();
+    }, 100);
+  });
+
+  // ===================== أزرار الواجهة =====================
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    confirmBackdrop.classList.add('show');
+  });
+  document.getElementById('confirmCancelBtn').addEventListener('click', () => {
+    confirmBackdrop.classList.remove('show');
+  });
+  document.getElementById('confirmOkBtn').addEventListener('click', () => {
+    confirmBackdrop.classList.remove('show');
+    newGame();
+  });
+  document.getElementById('tryAgainBtn').addEventListener('click', newGame);
+  document.getElementById('winNewGameBtn').addEventListener('click', () => {
+    winOverlay.classList.remove('show');
+    newGame();
+  });
+  document.getElementById('winContinueBtn').addEventListener('click', () => {
+    winOverlay.classList.remove('show');
+  });
+
+  document.getElementById('settingsToggleBtn').addEventListener('click', () => {
+    settingsBackdrop.classList.add('show');
+  });
+  document.getElementById('settingsCloseBtn').addEventListener('click', () => {
+    settingsBackdrop.classList.remove('show');
+  });
+
+  function applySwitchState(el, on) {
+    el.classList.toggle('on', on);
+  }
+  applySwitchState(soundSwitch, soundOn);
+  applySwitchState(hapticSwitch, hapticOn);
+
+  soundSwitch.addEventListener('click', () => {
+    soundOn = !soundOn;
+    localStorage.setItem('mergeGrid.sound', soundOn ? 'on' : 'off');
+    applySwitchState(soundSwitch, soundOn);
+  });
+  hapticSwitch.addEventListener('click', () => {
+    hapticOn = !hapticOn;
+    localStorage.setItem('mergeGrid.haptic', hapticOn ? 'on' : 'off');
+    applySwitchState(hapticSwitch, hapticOn);
+  });
+
+  // ===================== أزرار شاشة اللعبة: الرجوع للرئيسية =====================
+  document.getElementById('homeBackBtn').addEventListener('click', goHome);
+
+  // ===================== أزرار الشاشة الرئيسية =====================
+  document.getElementById('homePlayBtn').addEventListener('click', () => {
+    // إظهار الشاشة أولًا حتى تُقاس أبعاد الشبكة بشكل صحيح داخل newGame()->render()
+    showScreen(gameScreen);
+    newGame();
+  });
+  document.getElementById('homeContinueBtn').addEventListener('click', () => {
+    showScreen(gameScreen);
+    loadGame();
+  });
+  document.getElementById('homeSettingsBtn').addEventListener('click', () => {
+    settingsBackdrop.classList.add('show');
+  });
+  document.getElementById('homeHowToPlayBtn').addEventListener('click', () => {
+    howToBackdrop.classList.add('show');
+  });
+  document.getElementById('howToCloseBtn').addEventListener('click', () => {
+    howToBackdrop.classList.remove('show');
+  });
+
+  // ===================== نظام الثيمات (تبديل شكل الواجهة) =====================
+  const themeOptionEls = Array.from(document.querySelectorAll('.theme-option'));
+
+  function applyTheme(name, opts) {
+    opts = opts || {};
+    currentTheme = name;
+    if (name === 'vault') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', name);
+    }
+    localStorage.setItem('mergeGrid.theme', name);
+    themeOptionEls.forEach(el => {
+      el.classList.toggle('active', el.dataset.theme === name);
+    });
+    if (!opts.silent) playHaptic();
+  }
+
+  themeOptionEls.forEach(el => {
+    el.addEventListener('click', () => applyTheme(el.dataset.theme));
+  });
+
+  document.getElementById('homeThemesBtn').addEventListener('click', () => {
+    themeBackdrop.classList.add('show');
+  });
+  document.getElementById('themeCloseBtn').addEventListener('click', () => {
+    themeBackdrop.classList.remove('show');
+  });
+
+  document.getElementById('homeRateBtn').addEventListener('click', () => showToast('قريبًا'));
+  document.getElementById('homeShareBtn').addEventListener('click', () => showToast('قريبًا'));
+  document.getElementById('homeStatsBtn').addEventListener('click', () => {
+    showToast('أفضل نتيجة: ' + best);
+  });
+
+  // تطبيق الثيم المحفوظ فور الإقلاع (بلا اهتزاز ولا حفظ زائد)
+  applyTheme(currentTheme, { silent: true });
+
+  // ===================== الإقلاع: Splash → Home =====================
+  bestValueEl.textContent = String(best);
+  newGame(); // تجهيز لوحة اللعب في الخلفية حتى تكون جاهزة عند الدخول من "ابدأ اللعب"
+
+  showScreen(splashScreen);
+  setTimeout(() => {
+    goHome();
+  }, 1450);
+})();
+</script>
+</body>
+</html>
