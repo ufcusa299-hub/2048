@@ -27,7 +27,7 @@ const CONFIG = {
     { id: "hammer5",  kind: "hammer", n: 5,  price: 250 },
     { id: "hammer15", kind: "hammer", n: 15, price: 650 }
   ],
-  ANIM: { DROP: 150, SLIDE: 110, COLLAPSE: 70, POP: 170, FALL: 120, SMASH: 220 },
+  ANIM: { DROP: 150, SLIDE: 110, COLLAPSE: 70, POP: 230, FALL: 120, SMASH: 220 },
   /* إحساس السحب:
      MAGNET = قوة انجذاب القطعة لمركز العمود (0 = حرة تمامًا، 1 = تقفز بين الأعمدة)
      FOLLOW = سرعة لحاقها بالإصبع في كل إطار (أصغر = ألزج وأنعم) */
@@ -1070,16 +1070,16 @@ const Render = (function () {
             for (const a of st.absorbed) dropNode(a.id);
             const n = makeNode({ id: st.id, r: st.r, c: st.c, value: st.value });
             const tier = tierOf(st.value);
-            const popMs = Math.round(D.pop + 70 * tier);
-            const rot = (Math.random() < 0.5 ? -1 : 1) * Math.round(3 + 7 * tier);
+            const popMs = Math.round(D.pop + 45 * tier);
+            const rot = (Math.random() < 0.5 ? -1 : 1) * Math.round(2 + 4 * tier);
             n.el.style.zIndex = "3";
-            n.inner.style.setProperty("--pop-max", (1.16 + 0.22 * tier).toFixed(3));
+            n.inner.style.setProperty("--pop-max", (1.07 + 0.09 * tier).toFixed(3));
             n.inner.style.setProperty("--pop-rot", rot + "deg");
             n.inner.style.setProperty("--glow-a", (0.34 + 0.5 * tier).toFixed(2));
             n.inner.style.setProperty("--glow-blur", Math.round(8 + 20 * tier) + "px");
             n.inner.style.setProperty("--glow-spread", (1.5 + 5 * tier).toFixed(1) + "px");
             n.inner.style.animation = reduced ? ""
-              : "tile-pop " + popMs + "ms cubic-bezier(.34,1.68,.58,1) both, "
+              : "tile-pop " + popMs + "ms cubic-bezier(.32,1.28,.55,1) both, "
               + "merge-glow " + (popMs + 130) + "ms ease-out";
             if (!reduced) {
               const flash = document.createElement("div");
