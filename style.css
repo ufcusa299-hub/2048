@@ -1,0 +1,659 @@
+/* ==========================================================================
+   ملاحظة مهمة: هذا شكل مؤقت وظيفي فقط (رمادي محايد).
+   لا يوجد هنا أي تصميم مقترح. التصميم الحقيقي يُركّب في المرحلة 3
+   من الصورة التي سيرسلها المستخدم، ولن يتغير منطق اللعبة عندها.
+   ========================================================================== */
+
+/* ==========================================================================
+   لوحة ألوان لعبة 2048 الرسمية (Gabriele Cirulli, 2014 — رخصة MIT)
+   المصدر: github.com/gabrielecirulli/2048
+   القيم منسوخة كما هي من ملف التنسيق الأصلي، والمنطق والحركة من عندنا.
+   ========================================================================== */
+:root {
+  /* --- وحدة القياس ---
+     كل مقاس في الواجهتين مكتوب بـ var(--u) بدل البكسل الثابت.
+     --u = حجم "بكسل التصميم" الواحد على الجهاز الحالي، محسوب من 393×852،
+     ومقيَّد بالأصغر بين العرض والارتفاع حتى لا يفيض شيء على أي جوال.
+     النتيجة: الواجهة الرئيسية وشاشة اللعب متطابقتان في النسب على كل جهاز. */
+  --u: min(calc(min(100vw, 430px) / 393), calc(100svh / 852));
+
+  /* الألوان مقيسة مباشرة من الصورة المرجعية بأخذ عيّنات من بكسلاتها */
+  --bg:         #f5efe6;   /* خلفية الصفحة */
+  --text:       #504130;   /* النص الداكن */
+  --text-soft:  #8a7a68;   /* نص ثانوي */
+  --text-light: #fdfaf4;   /* النص الفاتح فوق البلاطات الملوّنة */
+  --board:      #e2d7cb;   /* إطار اللوحة */
+  --cell:       #d7cdbf;   /* الخانة الفارغة */
+  --lane:       #ddd1c5;   /* ممر القطعة الجاهزة */
+  --card:       #fbf5ed;   /* البطاقات الفاتحة */
+  --card-2:     #f7f1e9;
+  --btn:        #eadfd4;   /* زر لعبة جديدة */
+  --btn-active: #ded1c3;
+  --accent:     #faa539;   /* البرتقالي المميِّز */
+  --amber:      #e8b62c;   /* الكأس والنجمة */
+  --edge:       rgba(120, 101, 84, .14);
+  --shadow:     0 2px 0 rgba(120,101,84,.08), 0 6px 14px rgba(120,101,84,.10);
+  --gold:       243, 215, 116;   /* لون اللمعة الذهبية */
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; height: 100%; height: 100svh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+body { display: flex; align-items: center; justify-content: center; }
+
+/* إطار الهاتف: نسبة 9:19.5 (iPhone 15) مع احترام أطراف الشاشة */
+#app {
+  position: relative;
+  width: 100%; max-width: min(430px, calc(393 * var(--u)));
+  height: 100%; max-height: 100%;
+  margin-inline: auto;
+  display: flex; flex-direction: column;
+  padding-block: max(calc(12 * var(--u)), env(safe-area-inset-top))
+                 max(calc(12 * var(--u)), env(safe-area-inset-bottom));
+  gap: calc(9 * var(--u));
+  user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- الشريط العلوي (مؤقت) ---- */
+.topbar { display: flex; align-items: center; gap: 10px; }
+.title { font-size: 30px; font-weight: 800; letter-spacing: .5px; color: var(--text); }
+.scores { margin-inline-start: auto; display: flex; gap: 8px; }
+.score-box {
+  background: var(--board); border-radius: 6px; padding: 6px 12px;
+  text-align: center; min-width: 78px; color: var(--text-light);
+}
+.score-label { font-size: 11px; font-weight: 700; color: #eee4da; letter-spacing: .3px; }
+.score-value { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+.controls { display: flex; gap: 8px; }
+.btn {
+  flex: 1; appearance: none; border: 0; border-radius: 8px;
+  background: var(--btn); color: var(--text-light);
+  font-family: inherit; font-size: 15px; font-weight: 700;
+  padding: 11px 12px; cursor: pointer;
+}
+.btn:active { background: var(--btn-active); }
+.btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+/* ---- اللوحة ---- */
+.board-wrap {
+  flex: 1; min-height: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+#board {
+  position: relative;
+  direction: ltr;              /* اللوحة شبكة أرقام، لا علاقة لها باتجاه القراءة */
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  margin-inline: auto;
+  background: none;                 /* اللون انتقل إلى #board-bg */
+  container-type: inline-size; /* حتى تعمل وحدات cqw لحجم الأرقام */
+}
+/* الصندوق يشمل شبكة اللعب + ممرًا أسفلها تتحرك فيه القطعة قبل إطلاقها */
+#board-bg {
+  position: absolute; inset: 0;
+  background: var(--board);
+  border-radius: 10px;
+  z-index: 0;
+}
+/* ممر الإطلاق داخل الصندوق: أغمق قليلًا ويفصله خط عن شبكة اللعب */
+#lane {
+  position: absolute; left: 0; right: 0;
+  top: var(--lane-top); bottom: 0;
+  background: var(--lane);
+  border-top: 2px dashed rgba(120, 101, 84, .22);
+  border-radius: 0 0 10px 10px;
+  z-index: 0;
+}
+#cells, #tiles, #fx { position: absolute; inset: 0; }
+
+/* إطار القطعة الجاهزة للإطلاق */
+.carriage-frame {
+  position: absolute;
+  top: var(--pad-y); left: var(--pad-x);
+  width: var(--tile-w); height: var(--tile-h);
+  border-radius: 9px;
+  outline: 3px solid var(--board);
+  outline-offset: 3px;
+  transition: transform var(--aim, 90ms) cubic-bezier(.25,.8,.3,1);
+  pointer-events: none; z-index: 1;
+}
+#fx { pointer-events: none; z-index: 4; }
+
+.cell {
+  position: absolute;
+  width: var(--tile-w); height: var(--tile-h);
+  border-radius: 6px;
+  background: var(--cell);
+}
+
+/* البلاطة = طبقتان: الخارجية للموضع (انزلاق)، الداخلية للحجم (Pop) */
+.tile {
+  position: absolute;
+  top: var(--pad-y); left: var(--pad-x);
+  width: var(--tile-w); height: var(--tile-h);
+  transform: translate(0, 0);
+  transition: transform var(--slide, 110ms) cubic-bezier(.25, .72, .32, 1);
+  will-change: transform;
+  z-index: 2;
+}
+.tile-inner {
+  width: 100%; height: 100%;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  background: #eee4da; color: var(--text);
+  font-weight: 800; font-variant-numeric: tabular-nums;
+  line-height: 1;
+  transform-origin: 50% 50%;
+  backface-visibility: hidden;
+}
+/* حجم الخط = نسبة من عرض المربع نفسه، فيبقى متناسقًا مع أي مقاس شبكة.
+   ويصغر كلما زادت خانات الرقم — الأرقام تصل إلى 131072 */
+.tile-inner[data-len="1"],
+.tile-inner[data-len="2"] { font-size: calc(var(--cellw, 22.5) * 0.378 * 1cqw); }
+.tile-inner[data-len="3"] { font-size: calc(var(--cellw, 22.5) * 0.311 * 1cqw); }
+.tile-inner[data-len="4"] { font-size: calc(var(--cellw, 22.5) * 0.244 * 1cqw); }
+.tile-inner[data-len="5"] { font-size: calc(var(--cellw, 22.5) * 0.196 * 1cqw); }
+.tile-inner[data-len="6"] { font-size: calc(var(--cellw, 22.5) * 0.169 * 1cqw); }
+
+/* لون كل رقم — منقول حرفيًا من التصميم الأصلي */
+[data-value="2"]    > .tile-inner { background: #eee4da; }
+[data-value="4"]    > .tile-inner { background: #ede0c8; }
+[data-value="8"]    > .tile-inner { background: #f2b179; color: var(--text-light); }
+[data-value="16"]   > .tile-inner { background: #f59563; color: var(--text-light); }
+[data-value="32"]   > .tile-inner { background: #f67c5f; color: var(--text-light); }
+[data-value="64"]   > .tile-inner { background: #f65e3b; color: var(--text-light); }
+[data-value="128"]  > .tile-inner { background: #edcf72; color: var(--text-light);
+  box-shadow: 0 0 24px 8px rgba(var(--gold), .238), inset 0 0 0 1px rgba(255,255,255,.143); }
+[data-value="256"]  > .tile-inner { background: #edcc61; color: var(--text-light);
+  box-shadow: 0 0 24px 8px rgba(var(--gold), .317), inset 0 0 0 1px rgba(255,255,255,.190); }
+[data-value="512"]  > .tile-inner { background: #edc850; color: var(--text-light);
+  box-shadow: 0 0 24px 8px rgba(var(--gold), .397), inset 0 0 0 1px rgba(255,255,255,.238); }
+[data-value="1024"] > .tile-inner { background: #edc53f; color: var(--text-light);
+  box-shadow: 0 0 24px 8px rgba(var(--gold), .476), inset 0 0 0 1px rgba(255,255,255,.286); }
+[data-value="2048"] > .tile-inner { background: #edc22e; color: var(--text-light);
+  box-shadow: 0 0 24px 8px rgba(var(--gold), .556), inset 0 0 0 1px rgba(255,255,255,.333); }
+
+/* ما فوق 2048: اللعبة الأصلية تعطيها كلها لونًا داكنًا واحدًا، لكن هدف الفوز
+   عندنا صار 8192 فلا يصح أن تتشابه. أبقيت اللون الداكن الرسمي وميّزتها
+   بتدرّج في اللمعة الذهبية (نفس لون اللمعة الأصلي) بدل اختراع ألوان جديدة. */
+.super > .tile-inner { background: #3c3a32; color: var(--text-light); }
+[data-value="4096"]  > .tile-inner {
+  box-shadow: 0 0 24px 8px rgba(var(--gold), .30), inset 0 0 0 2px rgba(var(--gold), .55); }
+[data-value="8192"]  > .tile-inner {
+  box-shadow: 0 0 28px 10px rgba(var(--gold), .46), inset 0 0 0 3px rgba(var(--gold), .80); }
+[data-value="16384"] > .tile-inner {
+  box-shadow: 0 0 32px 12px rgba(var(--gold), .60), inset 0 0 0 3px rgb(var(--gold)); }
+
+/* --- حركات الدمج --- */
+/* 1) البلاطتان تنزلقان معًا ثم تنكمشان وتختفيان */
+@keyframes src-collapse {
+  from { transform: scale(1);   opacity: 1; }
+  to   { transform: scale(.68); opacity: 0; }
+}
+/* 2) الرقم الجديد يظهر بعدهما: انكماش تمهيدي خفيف ثم ارتداد قوي متجاوز الحجم
+   مع تمايل دوراني بسيط يعكس قوة الاصطدام، ثم استقرار نهائي. */
+@keyframes tile-pop {
+  0%   { transform: scale(.3)  rotate(0deg); opacity: 0; }
+  30%  { transform: scale(.86) rotate(calc(var(--pop-rot, 0deg) * .35)); opacity: 1; }
+  55%  { transform: scale(var(--pop-max, 1.12)) rotate(var(--pop-rot, 0deg)); }
+  75%  { transform: scale(.955) rotate(calc(var(--pop-rot, 0deg) * -.3)); }
+  90%  { transform: scale(1.02) rotate(calc(var(--pop-rot, 0deg) * .1)); }
+  100% { transform: scale(1)    rotate(0deg); opacity: 1; }
+}
+@keyframes merge-glow {
+  0%   { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+  35%  { box-shadow: 0 0 var(--glow-blur, 10px) var(--glow-spread, 2px) rgba(var(--gold), var(--glow-a, .35)); }
+  100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+}
+/* 3) ومضة بيضاء سريعة فوق البلاطة الجديدة لحظة ظهورها — إحساس "الاصطدام" */
+.tile-flash {
+  position: absolute; inset: 0; border-radius: 6px;
+  background: #fff; pointer-events: none;
+  animation: tile-flash-anim var(--flash-ms, 300ms) ease-out forwards;
+}
+@keyframes tile-flash-anim {
+  0%   { opacity: var(--flash-a, .8); }
+  100% { opacity: 0; }
+}
+/* 4) رقم النقاط العائم يرتفع ويتلاشى فوق مكان الدمج */
+.fx-score {
+  position: absolute;
+  top: var(--pad-y); left: var(--pad-x);
+  width: var(--tile-w); height: var(--tile-h);
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; z-index: 6;
+}
+.fx-score span {
+  font-weight: 800; font-variant-numeric: tabular-nums;
+  color: #d98a24;
+  font-size: calc(var(--cellw, 22.5) * 0.2 * 1cqw);
+  text-shadow: 0 1px 0 rgba(255,255,255,.55);
+  animation: score-pop 820ms cubic-bezier(.2,.8,.3,1) forwards;
+  display: block;
+}
+@keyframes score-pop {
+  0%   { opacity: 0; transform: translateY(0)     scale(.6); }
+  16%  { opacity: 1; transform: translateY(-10%)  scale(1.12); }
+  78%  { opacity: 1; transform: translateY(-68%)  scale(1); }
+  100% { opacity: 0; transform: translateY(-96%)  scale(.92); }
+}
+/* القطعة العشوائية الجديدة */
+@keyframes tile-spawn {
+  0%   { transform: scale(0);    opacity: 0; }
+  62%  { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* --- تأثير اللمعة والانفجار --- */
+.fx {
+  position: absolute;
+  top: var(--pad-y); left: var(--pad-x);
+  width: var(--tile-w); height: var(--tile-h);
+  pointer-events: none;
+}
+.fx-glow {
+  position: absolute; inset: -14%;
+  border-radius: 16px;
+  background: radial-gradient(circle, rgba(var(--gold), .95), rgba(var(--gold), 0) 66%);
+  animation: fx-glow 380ms ease-out forwards;
+}
+.fx-ring {
+  position: absolute; inset: 0;
+  border-radius: 9px;
+  border: 2px solid rgba(var(--gold), .95);
+  animation: fx-ring 430ms cubic-bezier(.2,.7,.3,1) forwards;
+}
+.fx-spark {
+  position: absolute; left: 50%; top: 50%;
+  width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px;
+  border-radius: 50%; background: rgb(var(--gold));
+  animation: fx-spark 440ms cubic-bezier(.2,.7,.3,1) forwards;
+}
+@keyframes fx-glow { 0% { opacity: 0; } 25% { opacity: var(--fx-a, .5); } 100% { opacity: 0; } }
+@keyframes fx-ring {
+  from { transform: scale(.58); opacity: var(--fx-a, .5); }
+  to   { transform: scale(var(--fx-s, 1.6)); opacity: 0; }
+}
+@keyframes fx-spark {
+  from { transform: translate(0, 0) scale(1); opacity: var(--fx-a, .6); }
+  to   { transform: translate(var(--dx, 0), var(--dy, 0)) scale(.15); opacity: 0; }
+}
+/* ارتداد اللوحة عند الدمج — يكبر مع حجم الدمجة عبر متغيرات CSS */
+@keyframes board-nudge {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  30%      { translate: 0 calc(var(--nudge-y, -2.5px) * -1); rotate: var(--nudge-r, 0deg); }
+  62%      { translate: 0 calc(var(--nudge-y, -2.5px) * .5); rotate: calc(var(--nudge-r, 0deg) * -.5); }
+  100%     { translate: 0 0; rotate: 0deg; }
+}
+#board.nudge { animation: board-nudge var(--nudge-ms, 170ms) ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tile { transition-duration: 1ms; }
+  #board.nudge { animation: none; }
+}
+
+/* ---- طبقة النتيجة (فوز / خسارة) ---- */
+#overlay {
+  position: absolute; inset: 0;
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center; gap: 14px;
+  background: rgba(238, 228, 218, .78);
+  border-radius: 10px; text-align: center; padding: 20px;
+}
+#overlay.show { display: flex; }
+#overlay-title { font-size: 30px; font-weight: 800; color: var(--text); }
+#overlay-sub { font-size: 16px; font-weight: 700; color: var(--text); opacity: .8; }
+#overlay .controls { width: 100%; max-width: 260px; }
+
+/* ===== منصة الإطلاق أسفل اللوحة: القطعة الحالية + القطعة التالية ===== */
+#play-area {
+  flex: 1; min-height: 0; display: flex; flex-direction: column;
+  touch-action: none;        /* حتى لا يسرق تمرير الصفحة حركة السحب */
+}
+/* منصة الإطلاق القديمة أُزيلت — القطعة التالية صارت داخل زر الشريط السفلي */
+.lch-slot.empty { visibility: hidden; }
+/* إبراز العمود المستهدف */
+.col-mark {
+  position: absolute; top: 0; height: var(--lane-top);
+  width: var(--tile-w);
+  border-radius: 8px;
+  background: rgba(255,255,255,.16);
+  opacity: 0; transition: opacity 120ms ease, transform 90ms ease;
+  pointer-events: none; z-index: 0;
+}
+.col-mark.on { opacity: 1; }
+
+.btn-small { flex: 0 0 auto; font-size: 13px; padding: 11px 12px; opacity: .8; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+.btn svg { width: 18px; height: 18px; flex: none; }
+.btn:disabled { opacity: .38; cursor: default; }
+
+/* الأيقونات من مجموعة Phosphor Icons — رخصة MIT، حرة للاستعمال التجاري
+   بلا نسب. المصدر: github.com/phosphor-icons/core */
+
+/* زر الشاكوش */
+#btn-hammer { flex: 0 0 auto; padding: 11px 14px; }
+#btn-hammer svg { width: 22px; height: 22px; }
+#btn-hammer.active { background: #f65e3b; }
+#btn-hammer.active svg { animation: hammer-swing 620ms ease-in-out infinite; }
+.count-badge {
+  font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums;
+  min-width: 14px; direction: ltr;
+}
+@keyframes hammer-swing {
+  0%, 100% { transform: rotate(0deg); }
+  35%      { transform: rotate(-24deg); }
+  60%      { transform: rotate(6deg); }
+}
+
+/* وضع الكسر: الأرقام تنبض لتدل على أنها قابلة للضرب */
+#board.hammer-on #cells { opacity: .5; }
+#board.hammer-on #tiles .tile:not(.carriage) .tile-inner {
+  animation: smash-ready 900ms ease-in-out infinite;
+}
+#board.hammer-on .tile.carriage { opacity: .35; }
+@keyframes smash-ready {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(246, 94, 59, 0); }
+  50%      { box-shadow: 0 0 0 3px rgba(246, 94, 59, .75); }
+}
+/* كسر القطعة */
+@keyframes tile-smash {
+  0%   { transform: scale(1)   rotate(0deg);  opacity: 1; }
+  22%  { transform: scale(1.16) rotate(-7deg); opacity: 1; }
+  100% { transform: scale(.22) rotate(11deg); opacity: 0; }
+}
+#diag {
+  display: none;
+  direction: ltr; text-align: center;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: calc(11 * var(--u)); line-height: 1.5;
+  color: var(--text); background: rgba(187,173,160,.25);
+  border-radius: 6px; padding: 5px 6px; margin-top: 4px;
+  word-break: break-all;
+}
+.hint { font-size: calc(12 * var(--u)); color: var(--text); opacity: .65; text-align: center; }
+
+/* ==========================================================================
+   نظام التصميم المأخوذ من الصورة المرجعية
+   النِّسب الأفقية مقيسة من الصورة (عرضها 976) ومحوّلة إلى شاشة 393.
+   الارتفاعات لم تُنقل حرفيًا لأن نسبة الصورة 1.65 والجوال 2.17.
+   ========================================================================== */
+#app { padding-inline: calc(13 * var(--u)); gap: calc(9 * var(--u)); }
+
+/* ---- الشريط العلوي ---- */
+.topbar {
+  direction: ltr;                    /* الترتيب البصري كما في الصورة تمامًا */
+  display: flex; align-items: center; gap: calc(10 * var(--u));
+  flex: none;
+}
+.scores { display: flex; gap: calc(6 * var(--u)); }
+.stat-card {
+  width: calc(54 * var(--u)); padding: calc(6 * var(--u)) calc(4 * var(--u)) calc(7 * var(--u));
+  background: var(--card); border-radius: calc(13 * var(--u));
+  border: 1px solid var(--edge); box-shadow: var(--shadow);
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  line-height: 1.15;
+}
+.stat-ico { display: block; }
+.stat-ico svg { width: calc(17 * var(--u)); height: calc(17 * var(--u)); display: block; }
+.stat-ico.gold { color: var(--amber); }
+.stat-lbl { font-size: calc(10 * var(--u)); font-weight: 700; color: var(--text); opacity: .82; }
+.stat-val { font-size: calc(14 * var(--u)); font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+
+.brand {
+  flex: 1; text-align: center;
+  font-size: calc(33 * var(--u)); font-weight: 800; letter-spacing: .5px;
+  color: var(--text); direction: ltr;
+}
+
+.top-actions { display: flex; gap: calc(8 * var(--u)); }
+.circle-btn {
+  width: calc(37 * var(--u)); height: calc(37 * var(--u)); border-radius: 50%;
+  border: 1px solid var(--edge); background: var(--card);
+  box-shadow: var(--shadow); color: var(--text);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0;
+}
+.circle-btn svg { width: calc(19 * var(--u)); height: calc(19 * var(--u)); }
+.circle-btn:active { background: var(--card-2); transform: translateY(1px); }
+
+/* ---- شريط الأدوات ---- */
+.toolbar { direction: ltr; display: flex; gap: calc(9 * var(--u)); flex: none; }
+.tool {
+  height: calc(44 * var(--u)); border-radius: calc(13 * var(--u));
+  border: 1px solid var(--edge); background: var(--card);
+  box-shadow: var(--shadow); color: var(--text);
+  font-family: inherit; font-size: calc(15 * var(--u)); font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center; gap: calc(8 * var(--u));
+  cursor: pointer; padding: 0 calc(12 * var(--u));
+}
+.tool:active { background: var(--card-2); transform: translateY(1px); }
+.tool:disabled { opacity: .4; cursor: default; transform: none; }
+.tool svg { width: calc(19 * var(--u)); height: calc(19 * var(--u)); flex: none; }
+.tool-sq { width: calc(42 * var(--u)); padding: 0; }
+.tool-sq svg { width: calc(20 * var(--u)); height: calc(20 * var(--u)); }
+.tool-hammer { width: calc(71 * var(--u)); }
+.tool-hammer svg { width: calc(22 * var(--u)); height: calc(22 * var(--u)); }
+.tool-hammer.active { background: var(--accent); color: var(--text-light); border-color: transparent; }
+.tool-hammer.active svg { animation: hammer-swing 620ms ease-in-out infinite; }
+.tool-wide { flex: 1; background: var(--btn); }
+.tool-wide:active { background: var(--btn-active); }
+
+/* ---- الشريط السفلي ---- */
+.bottom-nav {
+  direction: ltr; flex: none;
+  display: flex; align-items: stretch; justify-content: space-between; gap: calc(6 * var(--u));
+  padding-top: 2px;
+}
+.nav-card {
+  flex: 1; min-width: 0; height: calc(52 * var(--u));
+  border-radius: calc(14 * var(--u)); border: 1px solid var(--edge);
+  background: var(--card); box-shadow: var(--shadow); color: var(--text);
+  font-family: inherit; font-size: calc(10.5 * var(--u)); font-weight: 700;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  cursor: pointer; padding: 0 2px;
+}
+.nav-card svg { width: calc(19 * var(--u)); height: calc(19 * var(--u)); }
+.nav-card:active { background: var(--card-2); transform: translateY(1px); }
+.nav-card span { white-space: nowrap; }
+.nav-next {
+  background: var(--accent); border-color: transparent; color: var(--text-light);
+  height: calc(58 * var(--u)); margin-top: -calc(6 * var(--u));
+}
+.nav-next:active { background: #f0982c; }
+.next-lbl { font-size: calc(10.5 * var(--u)); opacity: .95; }
+.next-val > .tile-inner {
+  background: none !important; box-shadow: none !important;
+  color: var(--text-light); font-size: calc(21 * var(--u)); font-weight: 800;
+  display: block; width: auto; height: auto; line-height: 1;
+}
+
+/* ---- تبديل الشاشات ---- */
+.screen { display: none; flex-direction: column; height: 100%; min-height: 0; gap: calc(9 * var(--u)); }
+.screen.on { display: flex; }
+
+/* ---- الواجهة الأساسية ---- */
+#screen-home { justify-content: center; gap: 0; padding-bottom: 6%; }
+.home-top { text-align: center; margin-bottom: calc(6 * var(--u)); }
+.home-brand {
+  font-size: calc(72 * var(--u)); font-weight: 800; letter-spacing: 1px;
+  color: var(--text); direction: ltr; line-height: 1;
+}
+.home-sub { margin-top: calc(8 * var(--u)); font-size: calc(14 * var(--u)); font-weight: 700; color: var(--text-soft); }
+
+.home-best {
+  align-self: center; margin: calc(20 * var(--u)) 0 calc(26 * var(--u));
+  display: inline-flex; align-items: center; gap: calc(8 * var(--u));
+  background: var(--card); border: 1px solid var(--edge); box-shadow: var(--shadow);
+  border-radius: 999px; padding: calc(9 * var(--u)) calc(18 * var(--u));
+}
+.hb-ico svg { width: calc(18 * var(--u)); height: calc(18 * var(--u)); display: block; color: var(--amber); }
+.hb-lbl { font-size: calc(13 * var(--u)); font-weight: 700; color: var(--text); opacity: .8; }
+.hb-val { font-size: calc(16 * var(--u)); font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+
+.home-play {
+  height: calc(78 * var(--u)); border-radius: calc(20 * var(--u)); border: 0;
+  background: var(--accent); color: var(--text-light);
+  box-shadow: 0 4px 0 #d98a24, 0 10px 22px rgba(120,101,84,.20);
+  font-family: inherit; font-size: calc(26 * var(--u)); font-weight: 800;
+  display: flex; align-items: center; justify-content: center; gap: calc(12 * var(--u));
+  cursor: pointer;
+}
+.home-play svg { width: calc(30 * var(--u)); height: calc(30 * var(--u)); }
+.home-play:active { transform: translateY(3px); box-shadow: 0 1px 0 #d98a24, 0 5px 12px rgba(120,101,84,.18); }
+
+.home-grid { display: flex; gap: calc(9 * var(--u)); margin-top: calc(14 * var(--u)); }
+.home-card {
+  flex: 1; min-width: 0; height: calc(84 * var(--u));
+  border-radius: calc(18 * var(--u)); border: 1px solid var(--edge);
+  background: var(--card); box-shadow: var(--shadow); color: var(--text);
+  font-family: inherit; font-size: calc(12 * var(--u)); font-weight: 700;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(7 * var(--u));
+  cursor: pointer;
+}
+.home-card svg { width: calc(26 * var(--u)); height: calc(26 * var(--u)); }
+.home-card:active { background: var(--card-2); transform: translateY(1px); }
+
+/* ---- المتجر ---- */
+.coin-ico svg { width: calc(17 * var(--u)); height: calc(17 * var(--u)); display: block; color: #e0a326; }
+.coin-pill {
+  display: inline-flex; align-items: center; gap: calc(6 * var(--u));
+  background: var(--card); border: 1px solid var(--edge); box-shadow: var(--shadow);
+  border-radius: 999px; padding: calc(7 * var(--u)) calc(14 * var(--u));
+  font-size: calc(15 * var(--u)); font-weight: 800; color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.home-wallet {
+  align-self: center; margin-bottom: calc(6 * var(--u));
+  display: inline-flex; align-items: center; gap: calc(6 * var(--u));
+  background: var(--card); border: 1px solid var(--edge); box-shadow: var(--shadow);
+  border-radius: 999px; padding: calc(7 * var(--u)) calc(16 * var(--u));
+  font-size: calc(15 * var(--u)); font-weight: 800; color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+#screen-store { gap: calc(10 * var(--u)); }
+.shop-tabs {
+  display: flex; gap: calc(8 * var(--u)); flex: none;
+  background: var(--card-2); border: 1px solid var(--edge);
+  border-radius: calc(13 * var(--u)); padding: calc(4 * var(--u));
+}
+.shop-tab {
+  flex: 1; font-family: inherit; font-size: calc(13 * var(--u)); font-weight: 800;
+  color: var(--text-soft); background: transparent; border: none; border-radius: calc(10 * var(--u));
+  padding: calc(9 * var(--u)) 0; cursor: pointer;
+}
+.shop-tab.active { background: var(--card); color: var(--text); box-shadow: var(--shadow); }
+.gold-ico svg { color: var(--amber); }
+.shop-top { direction: ltr; display: flex; align-items: center; gap: calc(10 * var(--u)); flex: none; }
+.shop-title { flex: 1; text-align: center; font-size: calc(22 * var(--u)); font-weight: 800; color: var(--text); }
+.shop-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: calc(8 * var(--u)); }
+.shop-head {
+  font-size: calc(13 * var(--u)); font-weight: 800; color: var(--text-soft);
+  margin: calc(6 * var(--u)) calc(2 * var(--u)) calc(8 * var(--u));
+}
+.shop-row {
+  position: relative; width: 100%;
+  display: flex; align-items: center; gap: calc(12 * var(--u));
+  background: var(--card); border: 1px solid var(--edge); box-shadow: var(--shadow);
+  border-radius: calc(16 * var(--u)); padding: calc(12 * var(--u)) calc(14 * var(--u));
+  margin-bottom: calc(9 * var(--u));
+  font-family: inherit; color: var(--text); cursor: pointer; text-align: right;
+}
+.shop-row:active { background: var(--card-2); transform: translateY(1px); }
+.shop-row.locked { opacity: .55; cursor: default; }
+.shop-row.locked:active { transform: none; background: var(--card); }
+.shop-ico svg { width: calc(26 * var(--u)); height: calc(26 * var(--u)); display: block; }
+.shop-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: calc(3 * var(--u)); }
+.shop-txt b { font-size: calc(15 * var(--u)); font-weight: 800; }
+.shop-txt i { font-style: normal; font-size: calc(12 * var(--u)); color: var(--text-soft); }
+.shop-buy {
+  display: inline-flex; align-items: center; gap: calc(5 * var(--u));
+  background: var(--accent); color: var(--text-light);
+  border-radius: 999px; padding: calc(8 * var(--u)) calc(13 * var(--u));
+  font-size: calc(14 * var(--u)); font-weight: 800; white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.shop-buy svg { width: calc(15 * var(--u)); height: calc(15 * var(--u)); color: #fff2cf; }
+.soon-pill { background: var(--btn); color: var(--text-soft); }
+.soon-pill svg { color: var(--text-soft); }
+.shop-badge {
+  position: absolute; top: calc(-7 * var(--u)); inset-inline-start: calc(14 * var(--u));
+  background: var(--text); color: var(--text-light);
+  font-size: calc(10 * var(--u)); font-weight: 800;
+  padding: calc(3 * var(--u)) calc(9 * var(--u)); border-radius: 999px;
+}
+.shop-row.cant .shop-buy { background: var(--btn); color: var(--text-soft); }
+.shop-row.cant .shop-buy svg { color: var(--text-soft); }
+
+/* ---- الإعدادات ---- */
+#screen-settings { gap: calc(10 * var(--u)); }
+.set-row {
+  width: 100%;
+  display: flex; align-items: center; gap: calc(12 * var(--u));
+  background: var(--card); border: 1px solid var(--edge); box-shadow: var(--shadow);
+  border-radius: calc(16 * var(--u)); padding: calc(12 * var(--u)) calc(14 * var(--u));
+  margin-bottom: calc(9 * var(--u));
+}
+.set-ico svg { width: calc(24 * var(--u)); height: calc(24 * var(--u)); display: block; color: var(--text); }
+.set-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: calc(3 * var(--u)); }
+.set-txt b { font-size: calc(15 * var(--u)); font-weight: 800; }
+.set-txt i { font-style: normal; font-size: calc(12 * var(--u)); color: var(--text-soft); }
+
+.switch { position: relative; width: calc(46 * var(--u)); height: calc(27 * var(--u)); flex: none; display: block; }
+.switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+.switch .track {
+  position: absolute; inset: 0; background: var(--btn); border-radius: 999px;
+  transition: background 160ms ease;
+}
+.switch .knob {
+  position: absolute; top: calc(3 * var(--u)); left: calc(3 * var(--u));
+  width: calc(21 * var(--u)); height: calc(21 * var(--u)); border-radius: 50%;
+  background: var(--card); box-shadow: var(--shadow);
+  transition: transform 160ms ease;
+}
+.switch input:checked ~ .track { background: var(--accent); }
+.switch input:checked ~ .knob { transform: translateX(calc(19 * var(--u))); }
+
+.lang-pick { display: flex; gap: calc(8 * var(--u)); flex: none; }
+.lang-btn {
+  font-family: inherit; font-size: calc(13 * var(--u)); font-weight: 800;
+  padding: calc(8 * var(--u)) calc(14 * var(--u)); border-radius: 999px;
+  background: var(--btn); color: var(--text-soft); border: 1px solid var(--edge);
+  cursor: pointer;
+}
+.lang-btn.active { background: var(--accent); color: var(--text-light); border-color: transparent; }
+
+/* ---- رسالة «قريبًا» ---- */
+#toast {
+  position: absolute; left: 50%; bottom: calc(96 * var(--u));
+  transform: translate(-50%, 8px);
+  background: var(--text); color: var(--text-light);
+  font-size: calc(13 * var(--u)); font-weight: 700;
+  padding: calc(9 * var(--u)) calc(16 * var(--u)); border-radius: 999px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+  z-index: 50; white-space: nowrap;
+}
+#toast.on { opacity: .96; transform: translate(-50%, 0); }
+
+.hint { color: var(--text-soft); opacity: 1; }
+#diag { background: rgba(120,101,84,.12); }
+
+/* أزرار طبقة النتيجة تتبع الشكل الجديد */
+#overlay .btn {
+  background: var(--card); color: var(--text);
+  border: 1px solid var(--edge); box-shadow: var(--shadow);
+  border-radius: calc(13 * var(--u)); font-weight: 700;
+}
+#overlay { background: rgba(245, 239, 230, .84); }
