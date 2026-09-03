@@ -27,7 +27,7 @@ const CONFIG = {
     { id: "hammer5",  kind: "hammer", n: 5,  price: 250 },
     { id: "hammer15", kind: "hammer", n: 15, price: 650 }
   ],
-  ANIM: { DROP: 150, SLIDE: 110, COLLAPSE: 70, POP: 230, FALL: 120, SMASH: 220 },
+  ANIM: { DROP: 150, SLIDE: 110, COLLAPSE: 70, POP: 500, FALL: 120, SMASH: 220 },
   /* إحساس السحب:
      MAGNET = قوة انجذاب القطعة لمركز العمود (0 = حرة تمامًا، 1 = تقفز بين الأعمدة)
      FOLLOW = سرعة لحاقها بالإصبع في كل إطار (أصغر = ألزج وأنعم) */
