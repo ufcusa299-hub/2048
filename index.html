@@ -3,8 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#faf8ef">
-<title>2048 — المرحلة 2</title>
+<meta name="theme-color" content="#F7EFE9">
+<title>2048</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +17,7 @@
 <!-- ===================== الواجهة الأساسية ===================== -->
 <section class="screen" id="screen-home">
   <div class="home-top">
-    <div class="home-brand">2048</div>
+    <div class="home-brand"><span class="d1">2</span><span class="d2">0</span><span class="d3">4</span><span class="d4">8</span></div>
     <div class="home-sub" data-i18n="home_sub">اجمع الأرقام حتى ٢٠٤٨</div>
   </div>
 
@@ -181,7 +184,7 @@
       </div>
     </div>
 
-    <div class="brand">2048</div>
+    <div class="brand"><span class="d1">2</span><span class="d2">0</span><span class="d3">4</span><span class="d4">8</span></div>
 
     <div class="top-actions">
       <button class="circle-btn" id="btn-home" type="button" data-i18n-title="game_home_title" title="الواجهة الأساسية"><svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z"/></svg></button>
@@ -225,20 +228,20 @@
 
   <nav class="bottom-nav">
     <button class="nav-card soon" id="btn-undo" type="button" data-i18n-soon="nav_undo_label" data-soon="التراجع">
-      <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M236,184a12,12,0,0,1-24,0A84,84,0,0,0,68.6,124.6L53.11,140H88a12,12,0,0,1,0,24H24a12,12,0,0,1-12-12V88a12,12,0,0,1,24,0v35.16l15.66-15.55A108,108,0,0,1,236,184Z"/></svg><span data-i18n="nav_undo_label">تراجع</span>
+      <span class="nav-ico"><svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M236,184a12,12,0,0,1-24,0A84,84,0,0,0,68.6,124.6L53.11,140H88a12,12,0,0,1,0,24H24a12,12,0,0,1-12-12V88a12,12,0,0,1,24,0v35.16l15.66-15.55A108,108,0,0,1,236,184Z"/></svg></span><span data-i18n="nav_undo_label">تراجع</span>
     </button>
     <button class="nav-card soon" id="btn-stats" type="button" data-i18n-soon="nav_stats_label" data-soon="الإحصائيات">
-      <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1,0-16h8V136a8,8,0,0,1,8-8H72a8,8,0,0,1,8,8v64H96V88a8,8,0,0,1,8-8h32a8,8,0,0,1,8,8V200h16V40a8,8,0,0,1,8-8h40a8,8,0,0,1,8,8V200h8A8,8,0,0,1,232,208Z"/></svg><span data-i18n="nav_stats_label">إحصائيات</span>
+      <span class="nav-ico"><svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1,0-16h8V136a8,8,0,0,1,8-8H72a8,8,0,0,1,8,8v64H96V88a8,8,0,0,1,8-8h32a8,8,0,0,1,8,8V200h16V40a8,8,0,0,1,8-8h40a8,8,0,0,1,8,8V200h8A8,8,0,0,1,232,208Z"/></svg></span><span data-i18n="nav_stats_label">إحصائيات</span>
     </button>
     <button class="nav-card nav-next" id="btn-next" type="button">
       <span class="next-lbl" data-i18n="nav_next_label">التالي</span>
       <span class="next-val" id="lch-next"><span class="tile-inner"></span></span>
     </button>
     <button class="nav-card soon" id="btn-themes" type="button" data-i18n-soon="nav_themes_label" data-soon="المظاهر">
-      <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M200.77,53.89A103.27,103.27,0,0,0,128,24h-1.07A104,104,0,0,0,24,128c0,43,26.58,79.06,69.36,94.17A32,32,0,0,0,136,192a16,16,0,0,1,16-16h46.21a31.81,31.81,0,0,0,31.2-24.88,104.43,104.43,0,0,0,2.59-24A103.28,103.28,0,0,0,200.77,53.89ZM84,168a12,12,0,1,1,12-12A12,12,0,0,1,84,168Zm0-56a12,12,0,1,1,12-12A12,12,0,0,1,84,112Zm44-24a12,12,0,1,1,12-12A12,12,0,0,1,128,88Zm44,24a12,12,0,1,1,12-12A12,12,0,0,1,172,112Z"/></svg><span data-i18n="nav_themes_label">المظاهر</span>
+      <span class="nav-ico"><svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M200.77,53.89A103.27,103.27,0,0,0,128,24h-1.07A104,104,0,0,0,24,128c0,43,26.58,79.06,69.36,94.17A32,32,0,0,0,136,192a16,16,0,0,1,16-16h46.21a31.81,31.81,0,0,0,31.2-24.88,104.43,104.43,0,0,0,2.59-24A103.28,103.28,0,0,0,200.77,53.89ZM84,168a12,12,0,1,1,12-12A12,12,0,0,1,84,168Zm0-56a12,12,0,1,1,12-12A12,12,0,0,1,84,112Zm44-24a12,12,0,1,1,12-12A12,12,0,0,1,128,88Zm44,24a12,12,0,1,1,12-12A12,12,0,0,1,172,112Z"/></svg></span><span data-i18n="nav_themes_label">المظاهر</span>
     </button>
     <button class="nav-card soon" id="btn-achv" type="button" data-i18n-soon="nav_achv_label" data-soon="الإنجازات">
-      <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M232,64H208V48a8,8,0,0,0-8-8H56a8,8,0,0,0-8,8V64H24A16,16,0,0,0,8,80V96a40,40,0,0,0,40,40h3.65A80.13,80.13,0,0,0,120,191.61V216H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16H136V191.58c31.94-3.23,58.44-25.64,68.08-55.58H208a40,40,0,0,0,40-40V80A16,16,0,0,0,232,64ZM48,120A24,24,0,0,1,24,96V80H48v32q0,4,.39,8ZM232,96a24,24,0,0,1-24,24h-.5a81.81,81.81,0,0,0,.5-8.9V80h24Z"/></svg><span data-i18n="nav_achv_label">الإنجازات</span>
+      <span class="nav-ico"><svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M232,64H208V48a8,8,0,0,0-8-8H56a8,8,0,0,0-8,8V64H24A16,16,0,0,0,8,80V96a40,40,0,0,0,40,40h3.65A80.13,80.13,0,0,0,120,191.61V216H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16H136V191.58c31.94-3.23,58.44-25.64,68.08-55.58H208a40,40,0,0,0,40-40V80A16,16,0,0,0,232,64ZM48,120A24,24,0,0,1,24,96V80H48v32q0,4,.39,8ZM232,96a24,24,0,0,1-24,24h-.5a81.81,81.81,0,0,0,.5-8.9V80h24Z"/></svg></span><span data-i18n="nav_achv_label">الإنجازات</span>
     </button>
   </nav>
 

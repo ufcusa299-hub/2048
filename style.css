@@ -1,39 +1,42 @@
 /* ==========================================================================
-   ملاحظة مهمة: هذا شكل مؤقت وظيفي فقط (رمادي محايد).
-   لا يوجد هنا أي تصميم مقترح. التصميم الحقيقي يُركّب في المرحلة 3
-   من الصورة التي سيرسلها المستخدم، ولن يتغير منطق اللعبة عندها.
-   ========================================================================== */
-
-/* ==========================================================================
-   لوحة ألوان لعبة 2048 الرسمية (Gabriele Cirulli, 2014 — رخصة MIT)
-   المصدر: github.com/gabrielecirulli/2048
-   القيم منسوخة كما هي من ملف التنسيق الأصلي، والمنطق والحركة من عندنا.
+   نظام تصميم "الكلاي" (Clay 3D) — مبني بالكامل بـ CSS gradients/shadows
+   بدون أي صور خارجية. كل عنصر = تدرّج فاتح→غامق + ظل سفلي صلب من نفس
+   العائلة اللونية + خط إضاءة علوي، لمحاكاة شكل الألعاب المطاطية اللامعة.
    ========================================================================== */
 :root {
-  /* --- وحدة القياس ---
-     كل مقاس في الواجهتين مكتوب بـ var(--u) بدل البكسل الثابت.
-     --u = حجم "بكسل التصميم" الواحد على الجهاز الحالي، محسوب من 393×852،
-     ومقيَّد بالأصغر بين العرض والارتفاع حتى لا يفيض شيء على أي جوال.
-     النتيجة: الواجهة الرئيسية وشاشة اللعب متطابقتان في النسب على كل جهاز. */
+  /* --- وحدة القياس --- */
   --u: min(calc(min(100vw, 430px) / 393), calc(100svh / 852));
 
-  /* الألوان مقيسة مباشرة من الصورة المرجعية بأخذ عيّنات من بكسلاتها */
-  --bg:         #f5efe6;   /* خلفية الصفحة */
-  --text:       #504130;   /* النص الداكن */
-  --text-soft:  #8a7a68;   /* نص ثانوي */
-  --text-light: #fdfaf4;   /* النص الفاتح فوق البلاطات الملوّنة */
-  --board:      #e2d7cb;   /* إطار اللوحة */
-  --cell:       #d7cdbf;   /* الخانة الفارغة */
-  --lane:       #ddd1c5;   /* ممر القطعة الجاهزة */
-  --card:       #fbf5ed;   /* البطاقات الفاتحة */
-  --card-2:     #f7f1e9;
-  --btn:        #eadfd4;   /* زر لعبة جديدة */
-  --btn-active: #ded1c3;
-  --accent:     #faa539;   /* البرتقالي المميِّز */
-  --amber:      #e8b62c;   /* الكأس والنجمة */
-  --edge:       rgba(120, 101, 84, .14);
-  --shadow:     0 2px 0 rgba(120,101,84,.08), 0 6px 14px rgba(120,101,84,.10);
-  --gold:       243, 215, 116;   /* لون اللمعة الذهبية */
+  /* --- الخلفية والنص --- */
+  --bg:         #F7EFE9;
+  --text:       #4A3728;
+  --text-soft:  #9C8A76;
+  --text-light: #FFFFFF;
+  --board:      #ECE2D5;
+  --cell:       #E3D8C9;
+  --lane:       #E6DACB;
+  --card:       #FFFFFF;
+  --card-2:     #F5EEE4;
+  --btn:        #EDE3D6;
+  --btn-active: #E1D4C3;
+  --edge:       rgba(120, 101, 84, .10);
+  --shadow:     0 2px 0 rgba(120,101,84,.06), 0 6px 14px rgba(120,101,84,.08);
+  --gold:       243, 215, 116;
+
+  /* --- لوحة الكلاي --- */
+  --purple:      #8B5CF6; --purple-d:  #6D28D9; --purple-l:  #B08CFA;
+  --orange:      #FFA53D; --orange-d:  #E8850C; --orange-l:  #FFC470;
+  --teal:        #4ECDC4; --teal-d:    #299A92; --teal-l:    #7FE0D8;
+  --coral:       #FF6B6B; --coral-d:   #E5423F; --coral-l:   #FF9C9C;
+  --yellow:      #FFD93D; --yellow-d:  #E8AF08; --yellow-l:  #FFE787;
+  --mint:        #6EE7B7; --mint-d:    #34B784; --mint-l:    #A2F2D2;
+  --sky:         #7FB6FD; --sky-d:     #3E7FE0; --sky-l:     #B7D9FF;
+  --pink:        #FF8FC6; --pink-d:    #E9539E; --pink-l:    #FFC0E2;
+  --amber:       var(--yellow-d);
+  --accent:      var(--purple);
+
+  --clay-hi: rgba(255,255,255,.55);
+  --clay-lo: rgba(0,0,0,.14);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -41,11 +44,23 @@ html, body {
   margin: 0; padding: 0; height: 100%; height: 100svh;
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+  font-family: "Baloo Bhaijaan 2", system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
   -webkit-text-size-adjust: 100%;
   overscroll-behavior: none;
   touch-action: manipulation;
 }
+
+/* أداة عامة لبناء ملمس "الكلاي" على أي عنصر: تمرر لون أساسي وداكن وفاتح */
+.clay {
+  position: relative;
+  background: linear-gradient(180deg, var(--clay-l, #fff) 0%, var(--clay-c, #eee) 55%, var(--clay-c, #eee) 100%);
+  box-shadow:
+    inset 0 2px 2px var(--clay-hi),
+    inset 0 -4px 6px var(--clay-lo),
+    0 4px 0 var(--clay-d, #ccc),
+    0 8px 14px rgba(74,55,40,.16);
+}
+.clay:active { transform: translateY(3px); box-shadow: inset 0 2px 2px var(--clay-hi), inset 0 -2px 3px var(--clay-lo), 0 1px 0 var(--clay-d,#ccc), 0 3px 8px rgba(74,55,40,.14); }
 body { display: flex; align-items: center; justify-content: center; }
 
 /* إطار الهاتف: نسبة 9:19.5 (iPhone 15) مع احترام أطراف الشاشة */
@@ -165,34 +180,42 @@ body { display: flex; align-items: center; justify-content: center; }
 .tile-inner[data-len="5"] { font-size: calc(var(--cellw, 22.5) * 0.196 * 1cqw); }
 .tile-inner[data-len="6"] { font-size: calc(var(--cellw, 22.5) * 0.169 * 1cqw); }
 
-/* لون كل رقم — منقول حرفيًا من التصميم الأصلي */
-[data-value="2"]    > .tile-inner { background: #eee4da; }
-[data-value="4"]    > .tile-inner { background: #ede0c8; }
-[data-value="8"]    > .tile-inner { background: #f2b179; color: var(--text-light); }
-[data-value="16"]   > .tile-inner { background: #f59563; color: var(--text-light); }
-[data-value="32"]   > .tile-inner { background: #f67c5f; color: var(--text-light); }
-[data-value="64"]   > .tile-inner { background: #f65e3b; color: var(--text-light); }
-[data-value="128"]  > .tile-inner { background: #edcf72; color: var(--text-light);
-  box-shadow: 0 0 24px 8px rgba(var(--gold), .238), inset 0 0 0 1px rgba(255,255,255,.143); }
-[data-value="256"]  > .tile-inner { background: #edcc61; color: var(--text-light);
-  box-shadow: 0 0 24px 8px rgba(var(--gold), .317), inset 0 0 0 1px rgba(255,255,255,.190); }
-[data-value="512"]  > .tile-inner { background: #edc850; color: var(--text-light);
-  box-shadow: 0 0 24px 8px rgba(var(--gold), .397), inset 0 0 0 1px rgba(255,255,255,.238); }
-[data-value="1024"] > .tile-inner { background: #edc53f; color: var(--text-light);
-  box-shadow: 0 0 24px 8px rgba(var(--gold), .476), inset 0 0 0 1px rgba(255,255,255,.286); }
-[data-value="2048"] > .tile-inner { background: #edc22e; color: var(--text-light);
-  box-shadow: 0 0 24px 8px rgba(var(--gold), .556), inset 0 0 0 1px rgba(255,255,255,.333); }
+/* لون كل رقم — أسلوب كلاي: تدرّج فاتح-غامق + ظل سفلي صلب من نفس العائلة،
+   يتدرّج من فاتح/هادئ للأرقام الصغيرة إلى مشبّع/بنفسجي "بطولي" عند 2048 */
+.tile-inner {
+  --tc: #E3D8C9; --tcd: #CBBEAC;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tc) 70%, #fff) 0%, var(--tc) 60%, var(--tc) 100%);
+  box-shadow: inset 0 2px 2px rgba(255,255,255,.55), inset 0 -3px 5px rgba(0,0,0,.10), 0 3px 0 var(--tcd);
+}
+[data-value="2"]    > .tile-inner { --tc:#F5EEE4; --tcd:#DCCFBB; color: var(--text); }
+[data-value="4"]    > .tile-inner { --tc:var(--sky);    --tcd:var(--sky-d);    color: #fff; }
+[data-value="8"]    > .tile-inner { --tc:var(--teal);   --tcd:var(--teal-d);   color: #fff; }
+[data-value="16"]   > .tile-inner { --tc:var(--mint);   --tcd:var(--mint-d);   color: #fff; }
+[data-value="32"]   > .tile-inner { --tc:var(--yellow); --tcd:var(--yellow-d); color: var(--text); }
+[data-value="64"]   > .tile-inner { --tc:var(--orange); --tcd:var(--orange-d); color: #fff; }
+[data-value="128"]  > .tile-inner { --tc:var(--coral);  --tcd:var(--coral-d);  color: #fff; }
+[data-value="256"]  > .tile-inner { --tc:var(--pink);   --tcd:var(--pink-d);   color: #fff; }
+[data-value="512"]  > .tile-inner { --tc:#B08CFA;       --tcd:#8A5EE8;         color: #fff; }
+[data-value="1024"] > .tile-inner { --tc:var(--purple); --tcd:var(--purple-d); color: #fff; }
+[data-value="2048"] > .tile-inner {
+  --tc:var(--purple); --tcd:var(--purple-d); color: #fff;
+  box-shadow: inset 0 2px 2px rgba(255,255,255,.65), inset 0 -3px 5px rgba(0,0,0,.14), 0 3px 0 var(--tcd),
+    0 0 18px 4px rgba(139,92,246,.45);
+}
 
-/* ما فوق 2048: اللعبة الأصلية تعطيها كلها لونًا داكنًا واحدًا، لكن هدف الفوز
-   عندنا صار 8192 فلا يصح أن تتشابه. أبقيت اللون الداكن الرسمي وميّزتها
-   بتدرّج في اللمعة الذهبية (نفس لون اللمعة الأصلي) بدل اختراع ألوان جديدة. */
-.super > .tile-inner { background: #3c3a32; color: var(--text-light); }
+/* ما فوق 2048: نفس عائلة البنفسجي، أغمق تدريجيًا مع توهج مميّز */
+.super > .tile-inner { --tc:#6D28D9; --tcd:#4C1D95; color: #fff; }
 [data-value="4096"]  > .tile-inner {
-  box-shadow: 0 0 24px 8px rgba(var(--gold), .30), inset 0 0 0 2px rgba(var(--gold), .55); }
+  box-shadow: inset 0 2px 2px rgba(255,255,255,.4), inset 0 -3px 5px rgba(0,0,0,.18), 0 3px 0 var(--tcd),
+    0 0 20px 5px rgba(109,40,217,.40); }
 [data-value="8192"]  > .tile-inner {
-  box-shadow: 0 0 28px 10px rgba(var(--gold), .46), inset 0 0 0 3px rgba(var(--gold), .80); }
+  --tc:#4C1D95; --tcd:#2E1065;
+  box-shadow: inset 0 2px 2px rgba(255,255,255,.35), inset 0 -3px 5px rgba(0,0,0,.22), 0 3px 0 var(--tcd),
+    0 0 26px 7px rgba(76,29,149,.55); }
 [data-value="16384"] > .tile-inner {
-  box-shadow: 0 0 32px 12px rgba(var(--gold), .60), inset 0 0 0 3px rgb(var(--gold)); }
+  --tc:#2E1065; --tcd:#1a0940;
+  box-shadow: inset 0 2px 2px rgba(255,255,255,.3), inset 0 -3px 5px rgba(0,0,0,.26), 0 3px 0 var(--tcd),
+    0 0 32px 9px rgba(46,16,101,.65); }
 
 /* --- حركات الدمج --- */
 /* 1) البلاطتان تنزلقان معًا ثم تنكمشان وتختفيان */
@@ -413,19 +436,31 @@ body { display: flex; align-items: center; justify-content: center; }
 .brand {
   flex: 1; text-align: center;
   font-size: calc(33 * var(--u)); font-weight: 800; letter-spacing: .5px;
-  color: var(--text); direction: ltr;
+  direction: ltr;
 }
+.brand span {
+  -webkit-text-stroke: calc(2.5 * var(--u)) #fff;
+  paint-order: stroke fill;
+}
+.brand .d1 { color: var(--purple); }
+.brand .d2 { color: var(--orange); }
+.brand .d3 { color: var(--teal); }
+.brand .d4 { color: var(--coral); }
 
 .top-actions { display: flex; gap: calc(8 * var(--u)); }
 .circle-btn {
+  --clay-c: var(--purple); --clay-d: var(--purple-d); --clay-l: var(--purple-l);
   width: calc(37 * var(--u)); height: calc(37 * var(--u)); border-radius: 50%;
-  border: 1px solid var(--edge); background: var(--card);
-  box-shadow: var(--shadow); color: var(--text);
+  border: 0;
+  background: linear-gradient(180deg, var(--clay-l) 0%, var(--clay-c) 55%, var(--clay-c) 100%);
+  box-shadow: inset 0 2px 2px var(--clay-hi), inset 0 -3px 4px var(--clay-lo), 0 3px 0 var(--clay-d), 0 6px 10px rgba(74,55,40,.14);
+  color: #fff;
   display: inline-flex; align-items: center; justify-content: center;
   cursor: pointer; padding: 0;
 }
 .circle-btn svg { width: calc(19 * var(--u)); height: calc(19 * var(--u)); }
-.circle-btn:active { background: var(--card-2); transform: translateY(1px); }
+.circle-btn:active { transform: translateY(2px); box-shadow: inset 0 2px 2px var(--clay-hi), inset 0 -2px 3px var(--clay-lo), 0 1px 0 var(--clay-d), 0 3px 6px rgba(74,55,40,.12); }
+#btn-crown { --clay-c: var(--yellow); --clay-d: var(--yellow-d); --clay-l: var(--yellow-l); }
 
 /* ---- شريط الأدوات ---- */
 .toolbar { direction: ltr; display: flex; gap: calc(9 * var(--u)); flex: none; }
@@ -442,12 +477,23 @@ body { display: flex; align-items: center; justify-content: center; }
 .tool svg { width: calc(19 * var(--u)); height: calc(19 * var(--u)); flex: none; }
 .tool-sq { width: calc(42 * var(--u)); padding: 0; }
 .tool-sq svg { width: calc(20 * var(--u)); height: calc(20 * var(--u)); }
-.tool-hammer { width: calc(71 * var(--u)); }
+.tool-hammer { width: calc(71 * var(--u)); color: var(--orange-d); }
 .tool-hammer svg { width: calc(22 * var(--u)); height: calc(22 * var(--u)); }
-.tool-hammer.active { background: var(--accent); color: var(--text-light); border-color: transparent; }
+.tool-hammer.active {
+  --clay-c: var(--orange); --clay-d: var(--orange-d); --clay-l: var(--orange-l);
+  background: linear-gradient(180deg, var(--clay-l) 0%, var(--clay-c) 55%, var(--clay-c) 100%);
+  box-shadow: inset 0 2px 2px var(--clay-hi), inset 0 -3px 4px var(--clay-lo);
+  color: var(--text-light); border-color: transparent;
+}
 .tool-hammer.active svg { animation: hammer-swing 620ms ease-in-out infinite; }
-.tool-wide { flex: 1; background: var(--btn); }
-.tool-wide:active { background: var(--btn-active); }
+.tool-wide {
+  flex: 1;
+  --clay-c: var(--purple); --clay-d: var(--purple-d); --clay-l: var(--purple-l);
+  background: linear-gradient(180deg, var(--clay-l) 0%, var(--clay-c) 55%, var(--clay-c) 100%);
+  box-shadow: inset 0 2px 2px var(--clay-hi), inset 0 -3px 4px var(--clay-lo);
+  color: var(--text-light); border: 0;
+}
+.tool-wide:active { transform: translateY(2px); }
 
 /* ---- الشريط السفلي ---- */
 .bottom-nav {
@@ -457,20 +503,35 @@ body { display: flex; align-items: center; justify-content: center; }
 }
 .nav-card {
   flex: 1; min-width: 0; height: calc(52 * var(--u));
-  border-radius: calc(14 * var(--u)); border: 1px solid var(--edge);
+  border-radius: calc(14 * var(--u)); border: 0;
   background: var(--card); box-shadow: var(--shadow); color: var(--text);
   font-family: inherit; font-size: calc(10.5 * var(--u)); font-weight: 700;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   cursor: pointer; padding: 0 2px;
 }
-.nav-card svg { width: calc(19 * var(--u)); height: calc(19 * var(--u)); }
+.nav-card svg { width: calc(15 * var(--u)); height: calc(15 * var(--u)); color: #fff; display: block; }
 .nav-card:active { background: var(--card-2); transform: translateY(1px); }
 .nav-card span { white-space: nowrap; }
+/* دائرة ملوّنة خلف كل أيقونة، لون مختلف لكل زر مثل المرجع */
+.nav-ico {
+  width: calc(24 * var(--u)); height: calc(24 * var(--u)); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  --clay-c: var(--purple); --clay-d: var(--purple-d); --clay-l: var(--purple-l);
+  background: linear-gradient(180deg, var(--clay-l) 0%, var(--clay-c) 60%, var(--clay-c) 100%);
+  box-shadow: inset 0 1.5px 1.5px var(--clay-hi), inset 0 -2px 3px var(--clay-lo);
+}
+#btn-undo .nav-ico  { --clay-c: var(--purple); --clay-d: var(--purple-d); --clay-l: var(--purple-l); }
+#btn-stats .nav-ico { --clay-c: var(--sky);    --clay-d: var(--sky-d);    --clay-l: var(--sky-l); }
+#btn-themes .nav-ico{ --clay-c: var(--mint);   --clay-d: var(--mint-d);   --clay-l: var(--mint-l); }
+#btn-achv .nav-ico  { --clay-c: var(--yellow); --clay-d: var(--yellow-d); --clay-l: var(--yellow-l); }
 .nav-next {
-  background: var(--accent); border-color: transparent; color: var(--text-light);
+  --clay-c: var(--orange); --clay-d: var(--orange-d); --clay-l: var(--orange-l);
+  background: linear-gradient(180deg, var(--clay-l) 0%, var(--clay-c) 55%, var(--clay-c) 100%);
+  box-shadow: inset 0 2px 2px var(--clay-hi), inset 0 -4px 6px var(--clay-lo), 0 4px 0 var(--clay-d), 0 8px 14px rgba(74,55,40,.16);
+  border-color: transparent; color: var(--text-light);
   height: calc(58 * var(--u)); margin-top: -calc(6 * var(--u));
 }
-.nav-next:active { background: #f0982c; }
+.nav-next:active { transform: translateY(3px); box-shadow: inset 0 2px 2px var(--clay-hi), inset 0 -2px 3px var(--clay-lo), 0 1px 0 var(--clay-d), 0 3px 8px rgba(74,55,40,.14); }
 .next-lbl { font-size: calc(10.5 * var(--u)); opacity: .95; }
 .next-val > .tile-inner {
   background: none !important; box-shadow: none !important;
@@ -487,8 +548,17 @@ body { display: flex; align-items: center; justify-content: center; }
 .home-top { text-align: center; margin-bottom: calc(6 * var(--u)); }
 .home-brand {
   font-size: calc(72 * var(--u)); font-weight: 800; letter-spacing: 1px;
-  color: var(--text); direction: ltr; line-height: 1;
+  direction: ltr; line-height: 1;
 }
+.home-brand span {
+  -webkit-text-stroke: calc(5 * var(--u)) #fff;
+  paint-order: stroke fill;
+  text-shadow: 0 calc(5 * var(--u)) 0 rgba(74,55,40,.16);
+}
+.home-brand .d1 { color: var(--purple); }
+.home-brand .d2 { color: var(--orange); }
+.home-brand .d3 { color: var(--teal); }
+.home-brand .d4 { color: var(--coral); }
 .home-sub { margin-top: calc(8 * var(--u)); font-size: calc(14 * var(--u)); font-weight: 700; color: var(--text-soft); }
 
 .home-best {
@@ -501,28 +571,42 @@ body { display: flex; align-items: center; justify-content: center; }
 .hb-lbl { font-size: calc(13 * var(--u)); font-weight: 700; color: var(--text); opacity: .8; }
 .hb-val { font-size: calc(16 * var(--u)); font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
 
+.home-play, .home-card {
+  background: linear-gradient(180deg, var(--clay-l) 0%, var(--clay-c) 55%, var(--clay-c) 100%);
+  box-shadow:
+    inset 0 2px 2px var(--clay-hi),
+    inset 0 -4px 6px var(--clay-lo),
+    0 4px 0 var(--clay-d),
+    0 8px 14px rgba(74,55,40,.16);
+}
+.home-play:active, .home-card:active {
+  transform: translateY(3px);
+  box-shadow: inset 0 2px 2px var(--clay-hi), inset 0 -2px 3px var(--clay-lo), 0 1px 0 var(--clay-d), 0 3px 8px rgba(74,55,40,.14);
+}
 .home-play {
-  height: calc(78 * var(--u)); border-radius: calc(20 * var(--u)); border: 0;
-  background: var(--accent); color: var(--text-light);
-  box-shadow: 0 4px 0 #d98a24, 0 10px 22px rgba(120,101,84,.20);
+  --clay-c: var(--purple); --clay-d: var(--purple-d); --clay-l: var(--purple-l);
+  height: calc(78 * var(--u)); border-radius: calc(24 * var(--u)); border: 0;
+  color: var(--text-light);
   font-family: inherit; font-size: calc(26 * var(--u)); font-weight: 800;
   display: flex; align-items: center; justify-content: center; gap: calc(12 * var(--u));
   cursor: pointer;
 }
 .home-play svg { width: calc(30 * var(--u)); height: calc(30 * var(--u)); }
-.home-play:active { transform: translateY(3px); box-shadow: 0 1px 0 #d98a24, 0 5px 12px rgba(120,101,84,.18); }
 
 .home-grid { display: flex; gap: calc(9 * var(--u)); margin-top: calc(14 * var(--u)); }
 .home-card {
   flex: 1; min-width: 0; height: calc(84 * var(--u));
-  border-radius: calc(18 * var(--u)); border: 1px solid var(--edge);
-  background: var(--card); box-shadow: var(--shadow); color: var(--text);
+  border-radius: calc(20 * var(--u)); border: 0;
+  color: var(--text-light);
   font-family: inherit; font-size: calc(12 * var(--u)); font-weight: 700;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(7 * var(--u));
   cursor: pointer;
 }
 .home-card svg { width: calc(26 * var(--u)); height: calc(26 * var(--u)); }
-.home-card:active { background: var(--card-2); transform: translateY(1px); }
+#btn-settings-home { --clay-c: var(--teal); --clay-d: var(--teal-d); --clay-l: var(--teal-l); }
+#btn-store-home     { --clay-c: var(--orange); --clay-d: var(--orange-d); --clay-l: var(--orange-l); }
+#btn-stats-home     { --clay-c: var(--sky); --clay-d: var(--sky-d); --clay-l: var(--sky-l); }
+#btn-noads-home     { --clay-c: var(--coral); --clay-d: var(--coral-d); --clay-l: var(--coral-l); }
 
 /* ---- المتجر ---- */
 .coin-ico svg { width: calc(17 * var(--u)); height: calc(17 * var(--u)); display: block; color: #e0a326; }
@@ -573,13 +657,24 @@ body { display: flex; align-items: center; justify-content: center; }
 .shop-row:active { background: var(--card-2); transform: translateY(1px); }
 .shop-row.locked { opacity: .55; cursor: default; }
 .shop-row.locked:active { transform: none; background: var(--card); }
-.shop-ico svg { width: calc(26 * var(--u)); height: calc(26 * var(--u)); display: block; }
+.shop-ico {
+  width: calc(44 * var(--u)); height: calc(44 * var(--u)); border-radius: calc(14 * var(--u));
+  flex: none; display: flex; align-items: center; justify-content: center;
+  --clay-c: var(--orange); --clay-d: var(--orange-d); --clay-l: var(--orange-l);
+  background: linear-gradient(180deg, var(--clay-l) 0%, var(--clay-c) 60%, var(--clay-c) 100%);
+  box-shadow: inset 0 2px 2px var(--clay-hi), inset 0 -3px 4px var(--clay-lo);
+}
+.shop-ico svg { width: calc(24 * var(--u)); height: calc(24 * var(--u)); display: block; color: #fff; }
+[data-buy^="hammer"] .shop-ico { --clay-c: var(--orange); --clay-d: var(--orange-d); --clay-l: var(--orange-l); }
+.gold-ico { --clay-c: var(--yellow); --clay-d: var(--yellow-d); --clay-l: var(--yellow-l); }
 .shop-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: calc(3 * var(--u)); }
 .shop-txt b { font-size: calc(15 * var(--u)); font-weight: 800; }
 .shop-txt i { font-style: normal; font-size: calc(12 * var(--u)); color: var(--text-soft); }
 .shop-buy {
   display: inline-flex; align-items: center; gap: calc(5 * var(--u));
-  background: var(--accent); color: var(--text-light);
+  background: linear-gradient(180deg, var(--purple-l) 0%, var(--purple) 60%, var(--purple) 100%);
+  box-shadow: inset 0 2px 2px var(--clay-hi), inset 0 -3px 4px var(--clay-lo);
+  color: var(--text-light);
   border-radius: 999px; padding: calc(8 * var(--u)) calc(13 * var(--u));
   font-size: calc(14 * var(--u)); font-weight: 800; white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -605,7 +700,14 @@ body { display: flex; align-items: center; justify-content: center; }
   border-radius: calc(16 * var(--u)); padding: calc(12 * var(--u)) calc(14 * var(--u));
   margin-bottom: calc(9 * var(--u));
 }
-.set-ico svg { width: calc(24 * var(--u)); height: calc(24 * var(--u)); display: block; color: var(--text); }
+.set-ico {
+  width: calc(44 * var(--u)); height: calc(44 * var(--u)); border-radius: calc(14 * var(--u));
+  flex: none; display: flex; align-items: center; justify-content: center;
+  --clay-c: var(--teal); --clay-d: var(--teal-d); --clay-l: var(--teal-l);
+  background: linear-gradient(180deg, var(--clay-l) 0%, var(--clay-c) 60%, var(--clay-c) 100%);
+  box-shadow: inset 0 2px 2px var(--clay-hi), inset 0 -3px 4px var(--clay-lo);
+}
+.set-ico svg { width: calc(24 * var(--u)); height: calc(24 * var(--u)); display: block; color: #fff; }
 .set-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: calc(3 * var(--u)); }
 .set-txt b { font-size: calc(15 * var(--u)); font-weight: 800; }
 .set-txt i { font-style: normal; font-size: calc(12 * var(--u)); color: var(--text-soft); }
