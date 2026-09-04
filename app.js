@@ -385,7 +385,10 @@ const I18N = (function () {
       overlay_score_prefix: "النتيجة: ",
       overlay_win_prefix: "وصلت إلى ",
       crown_name: "التاج",
-      toast_unavailable: "هذا العنصر غير متاح"
+      toast_unavailable: "هذا العنصر غير متاح",
+      watch_ad_label: "شاهد إعلان",
+      watch_ad_loading: "جاري تحميل الإعلان...",
+      watch_ad_reward: "حصلت على 5 ذهب! 🎉"
     },
     en: {
       home_sub: "Merge numbers to reach 2048",
@@ -448,7 +451,10 @@ const I18N = (function () {
       overlay_score_prefix: "Score: ",
       overlay_win_prefix: "You reached ",
       crown_name: "Crown",
-      toast_unavailable: "This item is unavailable"
+      toast_unavailable: "This item is unavailable",
+      watch_ad_label: "Watch Ad",
+      watch_ad_loading: "Loading ad...",
+      watch_ad_reward: "You got 5 gold! 🎉"
     }
   };
 
@@ -1451,6 +1457,24 @@ const App = (function () {
       bStore.classList.remove("soon");          // المتجر صار حقيقيًا
       bStore.removeAttribute("data-soon");
       bStore.addEventListener("click", openShop);
+    }
+    // مشاهدة إعلان مقابل 5 عملات ذهب
+    const bWatchAd = document.getElementById("btn-watch-ad");
+    if (bWatchAd) {
+      bWatchAd.addEventListener("click", function () {
+        if (bWatchAd.classList.contains("loading")) return;
+        bWatchAd.classList.add("loading");
+        Toast.show(I18N.t("watch_ad_loading"));
+        // TODO: استبدل هذا الجزء باستدعاء SDK إعلانات حقيقي (مثل AdMob/AdSense)
+        // عند دمج شبكة إعلانات فعلية؛ حاليًا محاكاة بسيطة لتجربة المستخدم.
+        setTimeout(function () {
+          state.coins += 5;
+          Save.write(state);
+          syncHome();
+          Toast.show(I18N.t("watch_ad_reward"));
+          bWatchAd.classList.remove("loading");
+        }, 1500);
+      });
     }
     const bBack = document.getElementById("btn-store-back");
     if (bBack) bBack.addEventListener("click", function () { syncHome(); Screens.show("home"); });

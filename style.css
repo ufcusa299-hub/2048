@@ -618,13 +618,46 @@ body { display: flex; align-items: center; justify-content: center; }
   font-variant-numeric: tabular-nums;
 }
 .home-wallet {
-  align-self: center; margin-bottom: calc(6 * var(--u));
   display: inline-flex; align-items: center; gap: calc(6 * var(--u));
   background: var(--card); border: 1px solid var(--edge); box-shadow: var(--shadow);
   border-radius: 999px; padding: calc(7 * var(--u)) calc(16 * var(--u));
   font-size: calc(15 * var(--u)); font-weight: 800; color: var(--text);
   font-variant-numeric: tabular-nums;
 }
+
+/* ---- شريط الرصيد + زر مشاهدة إعلان مقابل ذهب ---- */
+.wallet-row {
+  align-self: center; margin-bottom: calc(6 * var(--u));
+  display: inline-flex; align-items: center; gap: calc(9 * var(--u));
+}
+.watch-ad-btn {
+  position: relative; flex: none; border: 0; cursor: pointer;
+  width: calc(38 * var(--u)); height: calc(38 * var(--u)); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  --clay-c: var(--mint); --clay-d: var(--mint-d); --clay-l: var(--mint-l);
+  background: linear-gradient(180deg, var(--clay-l) 0%, var(--clay-c) 55%, var(--clay-c) 100%);
+  box-shadow:
+    inset 0 2px 2px var(--clay-hi),
+    inset 0 -3px 4px var(--clay-lo),
+    0 3px 0 var(--clay-d),
+    0 6px 10px rgba(74,55,40,.14);
+}
+.watch-ad-btn:active {
+  transform: translateY(2px);
+  box-shadow: inset 0 2px 2px var(--clay-hi), inset 0 -2px 3px var(--clay-lo), 0 1px 0 var(--clay-d), 0 2px 5px rgba(74,55,40,.12);
+}
+.watch-ad-btn svg { width: calc(15 * var(--u)); height: calc(15 * var(--u)); color: #fff; margin-inline-start: calc(1.5 * var(--u)); }
+.watch-ad-btn .ad-badge {
+  position: absolute; top: calc(-7 * var(--u)); inset-inline-end: calc(-6 * var(--u));
+  background: var(--coral); color: #fff; font-size: calc(9.5 * var(--u)); font-weight: 800;
+  padding: calc(2 * var(--u)) calc(5 * var(--u)); border-radius: 999px; line-height: 1.3;
+  box-shadow: 0 2px 0 var(--coral-d); white-space: nowrap;
+  direction: ltr; /* حتى تبقى "+5" بترتيبها الصحيح داخل صفحة RTL */
+}
+.watch-ad-btn.loading { pointer-events: none; }
+.watch-ad-btn.loading svg { animation: adSpin .9s linear infinite; }
+.watch-ad-btn.loading .ad-badge { opacity: 0; }
+@keyframes adSpin { to { transform: rotate(360deg); } }
 
 #screen-store { gap: calc(10 * var(--u)); }
 .shop-tabs {
