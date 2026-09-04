@@ -666,7 +666,10 @@ body { display: flex; align-items: center; justify-content: center; }
 }
 .shop-ico svg { width: calc(24 * var(--u)); height: calc(24 * var(--u)); display: block; color: #fff; }
 [data-buy^="hammer"] .shop-ico { --clay-c: var(--orange); --clay-d: var(--orange-d); --clay-l: var(--orange-l); }
-.gold-ico { --clay-c: var(--yellow); --clay-d: var(--yellow-d); --clay-l: var(--yellow-l); }
+/* صف الذهب: العملة الملوّنة الجديدة هي نفسها الأيقونة، فلا داعي لمربع خلفها
+   (كان يطلع أصفر على أصفر وتضيع الملامح) */
+.shop-ico.gold-ico { background: none; box-shadow: none; }
+.shop-ico.gold-ico svg { width: calc(46 * var(--u)); height: calc(46 * var(--u)); }
 .shop-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: calc(3 * var(--u)); }
 .shop-txt b { font-size: calc(15 * var(--u)); font-weight: 800; }
 .shop-txt i { font-style: normal; font-size: calc(12 * var(--u)); color: var(--text-soft); }
@@ -689,7 +692,7 @@ body { display: flex; align-items: center; justify-content: center; }
   padding: calc(3 * var(--u)) calc(9 * var(--u)); border-radius: 999px;
 }
 .shop-row.cant .shop-buy { background: var(--btn); color: var(--text-soft); }
-.shop-row.cant .shop-buy svg { color: var(--text-soft); }
+.shop-row.cant .shop-buy svg { filter: grayscale(1); opacity: .55; }
 
 /* ---- الإعدادات ---- */
 #screen-settings { gap: calc(10 * var(--u)); }
