@@ -112,6 +112,7 @@ body { display: flex; align-items: center; justify-content: center; }
   margin-inline: auto;
   background: none;                 /* اللون انتقل إلى #board-bg */
   container-type: inline-size; /* حتى تعمل وحدات cqw لحجم الأرقام */
+  touch-action: none;          /* احتياط إضافي بجانب #play-area لبعض متصفحات الجوال */
 }
 /* الصندوق يشمل شبكة اللعب + ممرًا أسفلها تتحرك فيه القطعة قبل إطلاقها */
 #board-bg {
@@ -129,7 +130,7 @@ body { display: flex; align-items: center; justify-content: center; }
   border-radius: 0 0 10px 10px;
   z-index: 0;
 }
-#cells, #tiles, #fx { position: absolute; inset: 0; }
+#cells, #tiles, #fx { position: absolute; inset: 0; touch-action: none; }
 
 /* إطار القطعة الجاهزة للإطلاق */
 .carriage-frame {
