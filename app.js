@@ -899,6 +899,7 @@ const Render = (function () {
   let dragging = false, dragTarget = 0, dragShown = 0, raf = null;
   let dragTargetRow = CONFIG.ROWS, dragShownRow = CONFIG.ROWS;
   const clampRow = v => Math.max(0, Math.min(CONFIG.ROWS, v));
+  const FINGER_LIFT = 1.15;   // رفع بصري فوق نقطة اللمس حتى لا يغطي إصبع اللاعب القطعة أثناء سحبها
 
   function dragStart(colF, rowF) {
     if (!carriage) return;
@@ -924,7 +925,9 @@ const Render = (function () {
     if (Math.abs(sticky - dragShown) < 0.002) dragShown = sticky;
     dragShownRow += (dragTargetRow - dragShownRow) * F;    // لحاق حر بالإصبع رأسيًا (بلا انجذاب)
     if (Math.abs(dragTargetRow - dragShownRow) < 0.002) dragShownRow = dragTargetRow;
-    if (carriage) placeF(carriage, dragShownRow, dragShown);
+    // نعرض القطعة أعلى من نقطة اللمس الفعلية بقيمة FINGER_LIFT حتى تبقى ظاهرة
+    // للاعب فوق إصبعه، مع إبقاء dragShownRow نفسها (المستخدمة بمنطق الإفلات) على حالها
+    if (carriage) placeF(carriage, Math.max(0, dragShownRow - FINGER_LIFT), dragShown);
     frameAt(dragShown);
     markAt(clampCol(Math.round(dragShown)));
     raf = dragging ? requestAnimationFrame(tick) : null;
@@ -933,8 +936,8 @@ const Render = (function () {
      (dragShown). كان هذا هو الخطأ: الضغطة السريعة كانت تُطلق من العمود القديم
      لأن القطعة لم تكن قد لحقت بالإصبع بعد.
      كذلك، لا نُجبر القطعة على القفز رأسيًا لخط الممر عند الإفلات — نتركها في
-     مكانها الحالي (وهو نفس مكان إصبع اللاعب لحظة الرفع) لتكمل منه حركة
-     "الهبوط" بسلاسة نحو خانتها النهائية بدل قفزتين منفصلتين. */
+     مكانها الحالي (المرفوع بصريًا فوق الإصبع) لتكمل منه حركة "الهبوط" بسلاسة
+     نحو خانتها النهائية بدل قفزتين منفصلتين. */
   function dragEnd() {
     if (!dragging) return aimCol;
     dragging = false;
