@@ -892,41 +892,57 @@ const Render = (function () {
 
   /* ---------- السحب الحر باللزوجة ----------
      القطعة لا تقفز بين الأعمدة: تلاحق الإصبع كل إطار بنعومة (FOLLOW)،
-     مع انجذاب مغناطيسي نحو مركز أقرب عمود (MAGNET) فتُحسّ باستقرارها في مكانها. */
+     مع انجذاب مغناطيسي نحو مركز أقرب عمود (MAGNET) فتُحسّ باستقرارها في مكانها.
+     نفس الفكرة تنطبق رأسيًا: القطعة تقدر تدخل داخل الصندوق فعليًا وهي بيد
+     اللاعب (مو محصورة بخط الممر السفلي)، وعند الإفلات تكمل حركتها من نفس
+     نقطتها بسلاسة نحو خانتها النهائية بدل ما ترجع تُجبر لأسفل أول. */
   let dragging = false, dragTarget = 0, dragShown = 0, raf = null;
+  let dragTargetRow = CONFIG.ROWS, dragShownRow = CONFIG.ROWS;
+  const clampRow = v => Math.max(0, Math.min(CONFIG.ROWS, v));
 
-  function dragStart(colF) {
+  function dragStart(colF, rowF) {
     if (!carriage) return;
     dragging = true;
     dragShown = aimCol;
     dragTarget = clampCol(colF);
+    dragShownRow = CONFIG.ROWS;
+    dragTargetRow = clampRow(rowF === undefined ? CONFIG.ROWS : rowF);
     carriage.el.style.transitionDuration = "0ms";
     if (elFrame) elFrame.style.transitionDuration = "0ms";
     if (raf === null) tick();
   }
-  function dragMove(colF) {
+  function dragMove(colF, rowF) {
     if (!dragging) return;
     dragTarget = clampCol(colF);
+    if (rowF !== undefined) dragTargetRow = clampRow(rowF);
   }
   function tick() {
     const near = Math.round(dragTarget);
     const M = CONFIG.DRAG.MAGNET, F = CONFIG.DRAG.FOLLOW;
     const sticky = near + (dragTarget - near) * (1 - M);   // انجذاب نحو مركز العمود
-    dragShown += (sticky - dragShown) * F;                 // لحاق لزج بالإصبع
+    dragShown += (sticky - dragShown) * F;                 // لحاق لزج بالإصبع أفقيًا
     if (Math.abs(sticky - dragShown) < 0.002) dragShown = sticky;
-    if (carriage) placeF(carriage, CONFIG.ROWS, dragShown);
+    dragShownRow += (dragTargetRow - dragShownRow) * F;    // لحاق حر بالإصبع رأسيًا (بلا انجذاب)
+    if (Math.abs(dragTargetRow - dragShownRow) < 0.002) dragShownRow = dragTargetRow;
+    if (carriage) placeF(carriage, dragShownRow, dragShown);
     frameAt(dragShown);
     markAt(clampCol(Math.round(dragShown)));
     raf = dragging ? requestAnimationFrame(tick) : null;
   }
   /* رفع الإصبع: العبرة بموضع الإصبع (dragTarget) لا بموضع القطعة المتأخر عنه
      (dragShown). كان هذا هو الخطأ: الضغطة السريعة كانت تُطلق من العمود القديم
-     لأن القطعة لم تكن قد لحقت بالإصبع بعد. */
+     لأن القطعة لم تكن قد لحقت بالإصبع بعد.
+     كذلك، لا نُجبر القطعة على القفز رأسيًا لخط الممر عند الإفلات — نتركها في
+     مكانها الحالي (وهو نفس مكان إصبع اللاعب لحظة الرفع) لتكمل منه حركة
+     "الهبوط" بسلاسة نحو خانتها النهائية بدل قفزتين منفصلتين. */
   function dragEnd() {
     if (!dragging) return aimCol;
     dragging = false;
     if (raf !== null) { cancelAnimationFrame(raf); raf = null; }
-    aim(Math.round(dragTarget));
+    aimCol = clampCol(Math.round(dragTarget));
+    if (elFrame) elFrame.style.transitionDuration = AIM_MS + "ms";
+    frameAt(aimCol);
+    if (elMark) elMark.classList.remove("on");
     return aimCol;
   }
   function isDragging() { return dragging; }
@@ -1196,6 +1212,13 @@ const Input = (function () {
       if (!rect.width) return null;
       return ((x - rect.left) / rect.width) * CONFIG.COLS - 0.5;
     }
+    // موضع الإصبع → صف كسري: من 0 (أعلى الصندوق) إلى ROWS (ممر الإطلاق أسفله)
+    // حتى تقدر القطعة تدخل داخل الصندوق فعليًا وهي بيد اللاعب، مو محصورة بالممر.
+    function rowFloatAt(y) {
+      const rect = board.getBoundingClientRect();
+      if (!rect.height) return null;
+      return ((y - rect.top) / rect.height) * (CONFIG.ROWS + 1) - 0.5;
+    }
     const isBtn = e => !!(e.target && e.target.closest && e.target.closest("button"));
 
     let active = false, lastEnd = 0;
@@ -1210,25 +1233,25 @@ const Input = (function () {
         if (cell) H.smash(cell.r, cell.c);
         return false;
       }
-      const c = colFloatAt(x);
+      const c = colFloatAt(x), r = rowFloatAt(y);
       Diag.set({ حدث: src + "↓", س: Math.round(x), عمود: c === null ? "؟" : c.toFixed(2) });
       if (c === null) return false;
       active = true;
-      H.dragStart(c);
+      H.dragStart(c, r);
       return true;
     }
-    function moveTo(x, src) {
+    function moveTo(x, y, src) {
       if (!active) return;
-      const c = colFloatAt(x);
+      const c = colFloatAt(x), r = rowFloatAt(y);
       if (c === null) return;
       Diag.set({ حدث: src + "→", س: Math.round(x), عمود: c.toFixed(2) });
-      H.dragMove(c);
+      H.dragMove(c, r);
     }
-    function finish(x, src) {
+    function finish(x, y, src) {
       if (!active) return;
       active = false;
-      const c = colFloatAt(x);
-      if (c !== null) H.dragMove(c);
+      const c = colFloatAt(x), r = rowFloatAt(y);
+      if (c !== null) H.dragMove(c, r);
       const col = H.dragEnd();
       lastEnd = Date.now();
       Diag.set({ حدث: src + "↑", س: Math.round(x), عمود: col, يقبل: H.canDrop(col) ? "نعم" : "لا" });
@@ -1245,11 +1268,11 @@ const Input = (function () {
         if (begin(e.clientX, e.clientY, "لمس") && e.cancelable) e.preventDefault();
       });
       area.addEventListener("pointermove", e => {
-        moveTo(e.clientX, "لمس");
+        moveTo(e.clientX, e.clientY, "لمس");
         if (active && e.cancelable) e.preventDefault();
       });
-      area.addEventListener("pointerup", e => finish(e.clientX, "لمس"));
-      window.addEventListener("pointerup", e => finish(e.clientX, "لمس"));
+      area.addEventListener("pointerup", e => finish(e.clientX, e.clientY, "لمس"));
+      window.addEventListener("pointerup", e => finish(e.clientX, e.clientY, "لمس"));
       area.addEventListener("pointercancel", abort);
     } else {
       area.addEventListener("touchstart", e => {
@@ -1258,14 +1281,14 @@ const Input = (function () {
       }, { passive: false });
       area.addEventListener("touchmove", e => {
         if (!e.touches.length) return;
-        moveTo(e.touches[0].clientX, "لمس");
+        moveTo(e.touches[0].clientX, e.touches[0].clientY, "لمس");
         if (active && e.cancelable) e.preventDefault();
       }, { passive: false });
-      area.addEventListener("touchend", e => finish(e.changedTouches[0].clientX, "لمس"));
+      area.addEventListener("touchend", e => finish(e.changedTouches[0].clientX, e.changedTouches[0].clientY, "لمس"));
       area.addEventListener("touchcancel", abort);
       area.addEventListener("mousedown", e => { if (!isBtn(e)) begin(e.clientX, e.clientY, "فأرة"); });
-      window.addEventListener("mousemove", e => moveTo(e.clientX, "فأرة"));
-      window.addEventListener("mouseup", e => finish(e.clientX, "فأرة"));
+      window.addEventListener("mousemove", e => moveTo(e.clientX, e.clientY, "فأرة"));
+      window.addEventListener("mouseup", e => finish(e.clientX, e.clientY, "فأرة"));
     }
 
     // الاحتياط الأخير: لو لم يصل أي حدث سحب أصلًا، تكفي الضغطة
