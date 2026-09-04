@@ -333,6 +333,7 @@ body { display: flex; align-items: center; justify-content: center; }
   align-items: center; justify-content: center; gap: 14px;
   background: rgba(238, 228, 218, .78);
   border-radius: 10px; text-align: center; padding: 20px;
+  z-index: 20;   /* لازم تعلو كل شي داخل اللوحة: البلاطات (2-3)، #fx (4)، رقم النقاط العائم (6) */
 }
 #overlay.show { display: flex; }
 #overlay-title { font-size: 30px; font-weight: 800; color: var(--text); }
