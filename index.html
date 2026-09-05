@@ -16,6 +16,10 @@
 
 <!-- ===================== الواجهة الأساسية ===================== -->
 <section class="screen" id="screen-home">
+  <button class="daily-gift-btn" id="btn-daily-gift" type="button" data-i18n-title="daily_gift_title" title="الجائزة اليومية">
+    <img src="assets/gift.png" alt="">
+    <span class="daily-gift-badge" id="daily-gift-badge">1</span>
+  </button>
   <div class="home-top">
     <div class="home-brand"><span class="d1">2</span><span class="d2">0</span><span class="d3">4</span><span class="d4">8</span></div>
     <div class="home-sub" data-i18n="home_sub">اجمع الأرقام حتى ٢٠٤٨</div>
@@ -56,6 +60,26 @@
     </button>
   </div>
 </section>
+
+<!-- ===================== نافذة الجائزة اليومية ===================== -->
+<div id="daily-gift-modal">
+  <div class="dg-card">
+    <button class="dg-close" id="btn-daily-gift-close" type="button" aria-label="إغلاق">
+      <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg>
+    </button>
+    <img class="dg-hero" src="assets/gift.png" alt="">
+    <div class="dg-title" data-i18n="daily_gift_title">الجائزة اليومية</div>
+    <div class="dg-days" id="dg-days"></div>
+    <div class="dg-reward" id="dg-reward-row">
+      <span class="coin-ico"><svg viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="coinRimDG" cx="35%" cy="28%" r="80%"><stop offset="0%" stop-color="#FFEFA8"/><stop offset="55%" stop-color="#FFC93D"/><stop offset="100%" stop-color="#C8860A"/></radialGradient><radialGradient id="coinFaceDG" cx="35%" cy="28%" r="80%"><stop offset="0%" stop-color="#FFE787"/><stop offset="60%" stop-color="#FFD93D"/><stop offset="100%" stop-color="#E8AF08"/></radialGradient><linearGradient id="starGradDG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFF6D9"/><stop offset="100%" stop-color="#FFCB3D"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#coinRimDG)"/><circle cx="32" cy="32" r="24.5" fill="url(#coinFaceDG)"/><path d="M 32.0 18.5 L 35.29 27.47 L 44.84 27.83 L 37.33 33.73 L 39.94 42.92 L 32.0 37.6 L 24.06 42.92 L 26.67 33.73 L 19.16 27.83 L 28.71 27.47 Z" fill="url(#starGradDG)" stroke="#D98A0A" stroke-width="1.1" stroke-linejoin="round"/></svg></span>
+      <b id="dg-reward-amount">5</b>
+    </div>
+    <button class="dg-claim" id="btn-daily-gift-claim" type="button">
+      <span data-i18n="daily_gift_claim">استلام</span>
+    </button>
+    <div class="dg-note" id="dg-note"></div>
+  </div>
+</div>
 
 
 <!-- ===================== المتجر ===================== -->

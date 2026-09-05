@@ -31,7 +31,8 @@ const CONFIG = {
   /* إحساس السحب:
      MAGNET = قوة انجذاب القطعة لمركز العمود (0 = حرة تمامًا، 1 = تقفز بين الأعمدة)
      FOLLOW = سرعة لحاقها بالإصبع في كل إطار (أصغر = ألزج وأنعم) */
-  DRAG: { MAGNET: 0.15, FOLLOW: 0.6 }
+  DRAG: { MAGNET: 0.15, FOLLOW: 0.6 },
+  DAILY_REWARDS: [5, 10, 15, 20, 25, 30, 50]   // مكافأة كل يوم بدورة أسبوعية (7 أيام ثم تعيد)
 };
 
 /* --------------------- لوحة تشخيص (مطفأة افتراضيًا) ---------------------
@@ -82,6 +83,8 @@ const Save = (function () {
         coins: s.coins | 0,
         coinAcc: s.coinAcc | 0,
         hammerStock: s.hammerStock | 0,
+        dailyStreak: s.dailyStreak | 0,
+        dailyLastClaim: s.dailyLastClaim || null,
         game: {
           rows: s.rows, cols: s.cols,
           score: s.score | 0,
@@ -150,6 +153,8 @@ const Save = (function () {
     if (typeof d.coins === "number" && d.coins >= 0) s.coins = d.coins | 0;
     if (typeof d.coinAcc === "number" && d.coinAcc >= 0) s.coinAcc = d.coinAcc % CONFIG.COIN_PER;
     if (typeof d.hammerStock === "number" && d.hammerStock >= 0) s.hammerStock = d.hammerStock | 0;
+    if (typeof d.dailyStreak === "number" && d.dailyStreak >= 0) s.dailyStreak = d.dailyStreak | 0;
+    if (typeof d.dailyLastClaim === "string") s.dailyLastClaim = d.dailyLastClaim;
     const g = d.game;
     if (!valid(g)) return false;
 
@@ -388,7 +393,13 @@ const I18N = (function () {
       toast_unavailable: "هذا العنصر غير متاح",
       watch_ad_label: "شاهد إعلان",
       watch_ad_loading: "جاري تحميل الإعلان...",
-      watch_ad_reward: "حصلت على 5 ذهب! 🎉"
+      watch_ad_reward: "حصلت على 5 ذهب! 🎉",
+      daily_gift_title: "الجائزة اليومية",
+      daily_gift_claim: "استلام",
+      daily_gift_claimed_msg: "استلمت جائزة اليوم! 🎁",
+      daily_gift_come_back: "رجعت لك جائزة جديدة بعد",
+      daily_gift_streak_reset: "انقطع تتابعك، بدأنا من جديد 💪",
+      daily_gift_day: "اليوم"
     },
     en: {
       home_sub: "Merge numbers to reach 2048",
@@ -454,7 +465,13 @@ const I18N = (function () {
       toast_unavailable: "This item is unavailable",
       watch_ad_label: "Watch Ad",
       watch_ad_loading: "Loading ad...",
-      watch_ad_reward: "You got 5 gold! 🎉"
+      watch_ad_reward: "You got 5 gold! 🎉",
+      daily_gift_title: "Daily Gift",
+      daily_gift_claim: "Claim",
+      daily_gift_claimed_msg: "You claimed today's gift! 🎁",
+      daily_gift_come_back: "Come back in",
+      daily_gift_streak_reset: "Your streak reset, starting fresh 💪",
+      daily_gift_day: "Day"
     }
   };
 
@@ -522,6 +539,7 @@ const Engine = (function () {
       hammers: CONFIG.HAMMERS,   // المجانية، تتجدد كل جولة
       hammerStock: 0,            // المشتراة، تبقى بين الجولات
       coins: 0, coinAcc: 0,      // الرصيد وكسور النقاط التي لم تكتمل عملة بعد
+      dailyStreak: 0, dailyLastClaim: null,   // تتابع الجائزة اليومية
       drops: 0, nextId: 1,
       rng: rng || Math.random
     };
@@ -1339,6 +1357,87 @@ const App = (function () {
     Save.write(state);
   }
 
+  /* ---- الجائزة اليومية: تتابع لعب متواصل يعطي ذهبًا متزايدًا كل يوم ---- */
+  function todayStr() {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function daysBetween(a, b) {
+    // فرق الأيام التقويمية بين تاريخين "YYYY-MM-DD" (يتجاهل فروق التوقيت)
+    const [ay, am, ad] = a.split("-").map(Number);
+    const [by, bm, bd] = b.split("-").map(Number);
+    const ta = Date.UTC(ay, am - 1, ad), tb = Date.UTC(by, bm - 1, bd);
+    return Math.round((tb - ta) / 86400000);
+  }
+  // يحسب رقم اليوم التالي بالتتابع (1..7) لو الجائزة متاحة الآن، أو null لو استُلمت اليوم أصلًا
+  function dailyPendingDay() {
+    const today = todayStr();
+    if (state.dailyLastClaim === today) return null;              // استُلمت اليوم بالفعل
+    if (state.dailyLastClaim && daysBetween(state.dailyLastClaim, today) === 1) {
+      return (state.dailyStreak % CONFIG.DAILY_REWARDS.length) + 1;   // استمرار التتابع
+    }
+    return 1;                                                     // أول مرة أو انقطع التتابع
+  }
+  function syncDailyGiftBadge() {
+    const btn = document.getElementById("btn-daily-gift");
+    const badge = document.getElementById("daily-gift-badge");
+    if (!btn) return;
+    const pending = dailyPendingDay();
+    btn.classList.toggle("claimed", pending === null);
+    if (badge) badge.textContent = pending === null ? "" : "!";
+  }
+  function openDailyGift() {
+    const modal = document.getElementById("daily-gift-modal");
+    if (!modal) return;
+    const pending = dailyPendingDay();
+    const daysWrap = document.getElementById("dg-days");
+    const wasBroken = state.dailyLastClaim && pending === 1 && daysBetween(state.dailyLastClaim, todayStr()) > 1;
+    if (daysWrap) {
+      daysWrap.innerHTML = "";
+      const highlightUpTo = pending === null ? state.dailyStreak : pending - 1;
+      for (let i = 1; i <= CONFIG.DAILY_REWARDS.length; i++) {
+        const cell = document.createElement("div");
+        cell.className = "dg-day" + (i <= highlightUpTo ? " done" : "") + (i === pending ? " today" : "");
+        cell.innerHTML = '<span class="n">' + i + '</span><span>' + I18N.t("daily_gift_day") + '</span>';
+        daysWrap.appendChild(cell);
+      }
+    }
+    const dayForReward = pending === null ? (state.dailyStreak || 1) : pending;
+    const amount = CONFIG.DAILY_REWARDS[(dayForReward - 1) % CONFIG.DAILY_REWARDS.length];
+    const amountEl = document.getElementById("dg-reward-amount");
+    if (amountEl) amountEl.textContent = String(amount);
+    const claimBtn = document.getElementById("btn-daily-gift-claim");
+    const note = document.getElementById("dg-note");
+    if (claimBtn) {
+      claimBtn.disabled = pending === null;
+      claimBtn.querySelector("span").textContent = I18N.t(pending === null ? "daily_gift_claimed_msg" : "daily_gift_claim");
+    }
+    if (note) note.textContent = wasBroken ? I18N.t("daily_gift_streak_reset") : "";
+    modal.classList.add("show");
+  }
+  function closeDailyGift() {
+    const modal = document.getElementById("daily-gift-modal");
+    if (modal) modal.classList.remove("show");
+  }
+  function claimDailyGift() {
+    const pending = dailyPendingDay();
+    if (pending === null) return;
+    const amount = CONFIG.DAILY_REWARDS[(pending - 1) % CONFIG.DAILY_REWARDS.length];
+    state.coins += amount;
+    state.dailyStreak = pending;
+    state.dailyLastClaim = todayStr();
+    Save.write(state);
+    syncHome();
+    syncDailyGiftBadge();
+    Toast.show(I18N.t("daily_gift_claimed_msg"));
+    const claimBtn = document.getElementById("btn-daily-gift-claim");
+    const note = document.getElementById("dg-note");
+    if (claimBtn) { claimBtn.disabled = true; claimBtn.querySelector("span").textContent = I18N.t("daily_gift_claimed_msg"); }
+    if (note) note.textContent = "";
+    // إعادة رسم صف الأيام بعد الاستلام مباشرة (اليوم المستلم يتحول لأخضر)
+    openDailyGift();
+  }
+
   function doDrop(col) {
     if (!Engine.canDrop(state, col)) { Render.syncHud(state); return { ok: false }; }
     Render.commit();
@@ -1367,6 +1466,7 @@ const App = (function () {
     if (b) b.textContent = String(state.best);
     const c = document.getElementById("home-coins");
     if (c) c.textContent = String(state.coins);
+    syncDailyGiftBadge();
   }
 
   /* ---- المتجر ---- */
@@ -1504,6 +1604,19 @@ const App = (function () {
     }
     const bBack = document.getElementById("btn-store-back");
     if (bBack) bBack.addEventListener("click", function () { syncHome(); Screens.show("home"); });
+
+    // الجائزة اليومية
+    const bDailyGift = document.getElementById("btn-daily-gift");
+    if (bDailyGift) bDailyGift.addEventListener("click", openDailyGift);
+    const bDailyGiftClose = document.getElementById("btn-daily-gift-close");
+    if (bDailyGiftClose) bDailyGiftClose.addEventListener("click", closeDailyGift);
+    const dailyGiftModal = document.getElementById("daily-gift-modal");
+    if (dailyGiftModal) {
+      dailyGiftModal.addEventListener("click", function (e) { if (e.target === dailyGiftModal) closeDailyGift(); });
+    }
+    const bDailyGiftClaim = document.getElementById("btn-daily-gift-claim");
+    if (bDailyGiftClaim) bDailyGiftClaim.addEventListener("click", claimDailyGift);
+    syncDailyGiftBadge();
     Array.prototype.forEach.call(document.querySelectorAll("[data-buy]"), function (row) {
       row.addEventListener("click", function () { doBuy(row.dataset.buy); });
     });
